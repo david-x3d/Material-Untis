@@ -98,6 +98,19 @@ class CredentialStore(context: Context) {
         private const val KEY_KLASSE_ID = "klasse_id"
 
         private fun createPrefs(context: Context): SharedPreferences {
+            return try {
+                encrypted(context)
+            } catch (_: Exception) {
+                runCatching {
+                    context.deleteSharedPreferences(FILE)
+                    encrypted(context)
+                }.getOrElse {
+                    context.getSharedPreferences("${FILE}_plain", Context.MODE_PRIVATE)
+                }
+            }
+        }
+
+        private fun encrypted(context: Context): SharedPreferences {
             val masterKey = MasterKey.Builder(context)
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                 .build()

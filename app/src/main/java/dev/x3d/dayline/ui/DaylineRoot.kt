@@ -12,6 +12,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,7 +32,7 @@ import dev.x3d.dayline.ui.school.SchoolScreen
 import dev.x3d.dayline.ui.settings.SettingsScreen
 import dev.x3d.dayline.ui.today.TodayScreen
 import dev.x3d.dayline.ui.week.WeekScreen
-import org.koin.compose.koinInject
+import org.koin.core.context.GlobalContext
 
 object Routes {
     const val SCHOOL = "school"
@@ -45,7 +46,8 @@ object Routes {
 }
 
 @Composable
-fun DaylineRoot(repository: PeriodRepository = koinInject()) {
+fun DaylineRoot() {
+    val repository = remember { GlobalContext.get().get<PeriodRepository>() }
     val nav = rememberNavController()
     val start = if (repository.session.value == null) Routes.SCHOOL else Routes.TODAY
     val backStack by nav.currentBackStackEntryAsState()
