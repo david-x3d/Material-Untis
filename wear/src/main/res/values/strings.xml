@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Material-Untis</string>
+    <string name="wear_next">Next</string>
+    <string name="wear_empty">No lessons yet. Sync from the phone.</string>
+    <string name="wear_done">No more lessons</string>
+    <string name="complication_label">Next lesson</string>
+    <string name="status_cancelled">Cancelled</string>
+</resources>

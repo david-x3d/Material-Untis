@@ -1,0 +1,15 @@
+{
+  "jsonrpc": "2.0",
+  "id": "query",
+  "result": {
+    "schools": [
+      {
+        "server": "ajax.webuntis.com",
+        "displayName": "Example Gymnasium",
+        "loginName": "example",
+        "address": "Example Street 1, 00000 Example",
+        "schoolId": 1
+      }
+    ]
+  }
+}

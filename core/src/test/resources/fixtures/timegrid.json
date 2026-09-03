@@ -1,0 +1,15 @@
+{
+  "jsonrpc": "2.0",
+  "id": "req-3",
+  "result": [
+    {
+      "day": 2,
+      "timeUnits": [
+        { "name": "1", "startTime": 800, "endTime": 845 },
+        { "name": "2", "startTime": 850, "endTime": 935 },
+        { "name": "3", "startTime": 955, "endTime": 1040 },
+        { "name": "4", "startTime": 1045, "endTime": 1130 }
+      ]
+    }
+  ]
+}

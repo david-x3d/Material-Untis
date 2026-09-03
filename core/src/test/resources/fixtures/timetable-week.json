@@ -1,0 +1,51 @@
+{
+  "jsonrpc": "2.0",
+  "id": "req-2",
+  "result": [
+    {
+      "id": 9001,
+      "date": 20260903,
+      "startTime": 800,
+      "endTime": 845,
+      "su": [{ "id": 1, "name": "M", "longname": "Mathematics" }],
+      "te": [{ "id": 10, "name": "AB", "longname": "A. Baker" }],
+      "ro": [{ "id": 3, "name": "101", "longname": "Room 101" }],
+      "kl": [{ "id": 12, "name": "9a", "longname": "Class 9a" }]
+    },
+    {
+      "id": 9002,
+      "date": 20260903,
+      "startTime": 850,
+      "endTime": 935,
+      "code": "irregular",
+      "substText": "Covered by C. Diaz",
+      "su": [{ "id": 2, "name": "En", "longname": "English" }],
+      "te": [{ "id": 11, "name": "CD", "longname": "C. Diaz", "orgid": 99, "orgname": "XY" }],
+      "ro": [{ "id": 4, "name": "204", "longname": "Room 204" }],
+      "kl": [{ "id": 12, "name": "9a", "longname": "Class 9a" }]
+    },
+    {
+      "id": 9003,
+      "date": 20260903,
+      "startTime": 955,
+      "endTime": 1040,
+      "code": "cancelled",
+      "info": "Sports day postponed",
+      "su": [{ "id": 3, "name": "PE", "longname": "Physical Education" }],
+      "te": [{ "id": 12, "name": "EF", "longname": "E. Frost" }],
+      "ro": [{ "id": 5, "name": "GYM", "longname": "Gymnasium" }],
+      "kl": [{ "id": 12, "name": "9a", "longname": "Class 9a" }]
+    },
+    {
+      "id": 9004,
+      "date": 20260904,
+      "startTime": 720,
+      "endTime": 805,
+      "lstype": "ls",
+      "su": [{ "id": 4, "name": "Ph", "longname": "Physics" }],
+      "te": [{ "id": 13, "name": "GH", "longname": "G. Hale" }],
+      "ro": [{ "id": 6, "name": "Lab", "longname": "Lab 1" }],
+      "kl": [{ "id": 12, "name": "9a", "longname": "Class 9a" }]
+    }
+  ]
+}
