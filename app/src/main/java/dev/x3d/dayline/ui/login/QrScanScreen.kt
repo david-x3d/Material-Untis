@@ -41,7 +41,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun QrScanScreen(
     onDone: () -> Unit,
-    draftStore: QrDraftStore = org.koin.compose.koinInject(),
+    draftStore: QrDraftStore = remember { org.koin.core.context.GlobalContext.get().get() },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
