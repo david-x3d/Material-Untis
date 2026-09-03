@@ -1,0 +1,8 @@
+{
+  "jsonrpc": "2.0",
+  "id": "req-1",
+  "error": {
+    "code": -8504,
+    "message": "not authenticated"
+  }
+}

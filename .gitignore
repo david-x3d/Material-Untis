@@ -1,0 +1,46 @@
+# Gradle
+.gradle/
+build/
+**/build/
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+output-metadata.json
+
+# Keystores and secrets
+*.jks
+*.keystore
+*.p12
+keystore.properties
+secrets.properties
+google-services.json
+*.key
+credentials.json
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Untis / user data
+*.session
+untis-login*
+.env
+.env.*
+
+# Tests / coverage
+.cxx/
+*.exec
+jacoco/
+
+# Kotlin
+.kotlin/
