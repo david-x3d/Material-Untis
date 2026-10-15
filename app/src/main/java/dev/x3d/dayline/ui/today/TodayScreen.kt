@@ -95,7 +95,10 @@ private fun NextHero(lesson: Lesson, now: dev.x3d.dayline.domain.time.UntisTime,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {
         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.today_next), style = MaterialTheme.typography.labelLarge)
+            Text(
+                stringResource(if (minsToStart > 0) R.string.today_next else R.string.today_now),
+                style = MaterialTheme.typography.labelLarge,
+            )
             Text(lesson.subjectLabel, style = MaterialTheme.typography.displaySmall)
             Text("${lesson.roomLabel} · ${lesson.start.format()}", style = MaterialTheme.typography.titleMedium)
             Text(countdown, style = MaterialTheme.typography.titleLarge)

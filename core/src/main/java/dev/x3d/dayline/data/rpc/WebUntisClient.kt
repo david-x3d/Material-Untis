@@ -35,6 +35,10 @@ class WebUntisClient(
 
     @Volatile
     var connection: Connection? = null
+        set(value) {
+            field = value
+            cookieJar.school = value?.school
+        }
 
     suspend fun authenticate(host: String, school: String, user: String, password: String): AuthenticateResult {
         connection = Connection(normalizeHost(host), school)
@@ -77,6 +81,59 @@ class WebUntisClient(
     suspend fun getTimegridUnits(): List<TimegridDayDto> {
         val result = call("getTimegridUnits", JsonObject(emptyMap()))
         return json.decodeFromJsonElement(result)
+    }
+
+    suspend fun getCurrentSchoolYear(): SchoolYearDto? {
+        val result = call("getCurrentSchoolyear", JsonObject(emptyMap()))
+        if (result is JsonNull) return null
+        return json.decodeFromJsonElement(result)
+    }
+
+    /**
+     * Student absences. Not part of JSON-RPC: this is the same REST endpoint the WebUntis web app
+     * uses for "My absences". It is authorised by the JSESSIONID + schoolname cookies.
+     */
+    suspend fun getStudentAbsences(studentId: Int, startDate: Int, endDate: Int, retryAuth: Boolean = true): List<AbsenceDto> {
+        val conn = connection ?: throw PeriodException.Auth("No school selected")
+        val url = absencesUrl(conn.host, studentId, startDate, endDate)
+        val text = try {
+            restGet(url)
+        } catch (e: PeriodException.SessionExpired) {
+            val reauth = reauthenticator
+            if (!retryAuth || reauth == null) throw e
+            reauth.reauthenticate()
+            return getStudentAbsences(studentId, startDate, endDate, retryAuth = false)
+        }
+        // No "data" means an error page/message, never "no absences".
+        val data = json.decodeFromString(AbsencesEnvelope.serializer(), text).data
+            ?: throw PeriodException.Rpc(0, text.take(200))
+        return data.absences
+    }
+
+    private suspend fun restGet(url: HttpUrl): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .header("Accept", "application/json")
+            .build()
+        try {
+            http.newCall(request).execute().use { httpResponse ->
+                if (httpResponse.code == 401 || httpResponse.code == 403) {
+                    throw PeriodException.SessionExpired()
+                }
+                if (!httpResponse.isSuccessful) {
+                    throw PeriodException.Network(IOException("HTTP ${httpResponse.code}"))
+                }
+                val text = httpResponse.body?.string().orEmpty()
+                // An expired session is answered with the HTML login page instead of JSON.
+                if (!text.trimStart().startsWith("{")) throw PeriodException.SessionExpired()
+                text
+            }
+        } catch (e: PeriodException) {
+            throw e
+        } catch (e: IOException) {
+            throw PeriodException.Network(e)
+        }
     }
 
     suspend fun call(method: String, params: JsonElement, retryAuth: Boolean = true): JsonElement {
@@ -144,6 +201,15 @@ class WebUntisClient(
             val encodedSchool = URLEncoder.encode(school, Charsets.UTF_8.name())
             return "https://${normalizeHost(host)}/WebUntis/jsonrpc.do?school=$encodedSchool".toHttpUrl()
         }
+
+        fun absencesUrl(host: String, studentId: Int, startDate: Int, endDate: Int): HttpUrl =
+            "https://${normalizeHost(host)}/WebUntis/api/classreg/absences/students".toHttpUrl()
+                .newBuilder()
+                .addQueryParameter("startDate", startDate.toString())
+                .addQueryParameter("endDate", endDate.toString())
+                .addQueryParameter("studentId", studentId.toString())
+                .addQueryParameter("excuseStatusId", "-1")
+                .build()
 
         fun isAuthError(error: JsonRpcError): Boolean {
             val message = error.message.orEmpty().lowercase()

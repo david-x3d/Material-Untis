@@ -1,5 +1,6 @@
 package dev.x3d.dayline.domain
 
+import dev.x3d.dayline.domain.model.AbsenceReport
 import dev.x3d.dayline.domain.model.Lesson
 import dev.x3d.dayline.domain.model.School
 import dev.x3d.dayline.domain.model.SyncState
@@ -22,6 +23,13 @@ interface PeriodRepository {
     suspend fun loginSecret(user: String, secret: String)
     suspend fun logout()
     suspend fun refresh(force: Boolean = false)
+
+    /** Fetches Monday–Sunday of the week starting at [monday] into the cache. */
+    suspend fun loadWeek(monday: UntisDate)
+
+    /** Cached absences of the current school year (null until fetched once). */
+    fun absences(): Flow<AbsenceReport?>
+    suspend fun refreshAbsences()
     fun lessonsForDate(date: UntisDate): Flow<List<Lesson>>
     fun lessonsInRange(start: UntisDate, end: UntisDate): Flow<List<Lesson>>
     fun lesson(id: Long): Flow<Lesson?>

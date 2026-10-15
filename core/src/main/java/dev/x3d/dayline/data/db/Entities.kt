@@ -19,6 +19,7 @@ data class LessonEntity(
     val roomId: Int,
     val roomShort: String,
     val roomLong: String,
+    val roomOriginal: String? = null,
     val classId: Int,
     val classShort: String,
     val status: String,

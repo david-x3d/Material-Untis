@@ -101,3 +101,34 @@ data class WatchStatus(
     val lastPushedAt: Long? = null,
     val message: String? = null,
 )
+
+data class SchoolYear(
+    val name: String,
+    val start: UntisDate,
+    val end: UntisDate,
+)
+
+enum class AbsenceStatus {
+    EXCUSED,
+    UNEXCUSED,
+    OPEN,
+}
+
+data class Absence(
+    val id: Long,
+    val startDate: UntisDate,
+    val endDate: UntisDate,
+    val start: UntisTime,
+    val end: UntisTime,
+    val reason: String?,
+    val text: String?,
+    val status: AbsenceStatus,
+    /** Status text as the school wrote it, e.g. "entschuldigt". */
+    val statusLabel: String?,
+)
+
+data class AbsenceReport(
+    val schoolYear: SchoolYear,
+    val absences: List<Absence>,
+    val fetchedAt: Long,
+)

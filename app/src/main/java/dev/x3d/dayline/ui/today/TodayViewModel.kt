@@ -8,7 +8,12 @@ import dev.x3d.dayline.domain.model.LessonStatus
 import dev.x3d.dayline.domain.model.SyncState
 import dev.x3d.dayline.domain.time.UntisDate
 import dev.x3d.dayline.domain.time.UntisTime
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -24,10 +29,20 @@ data class TodayUiState(
 class TodayViewModel(
     private val repository: PeriodRepository,
 ) : ViewModel() {
+    /** Re-evaluated every 30 s so countdowns move and the day rolls over at midnight. */
+    private val clock = flow {
+        while (true) {
+            emit(UntisDate.today())
+            delay(30_000)
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     val state: StateFlow<TodayUiState> = combine(
-        repository.lessonsForDate(UntisDate.today()),
+        clock.distinctUntilChanged().flatMapLatest { repository.lessonsForDate(it) },
         repository.syncState,
-    ) { lessons, sync ->
+        clock,
+    ) { lessons, sync, _ ->
         val now = UntisTime.now()
         TodayUiState(
             lessons = lessons.sortedBy { it.start.raw },
@@ -48,8 +63,9 @@ class TodayViewModel(
     companion object {
         fun nextLesson(lessons: List<Lesson>, now: UntisTime): Lesson? {
             val active = lessons.filter { it.status != LessonStatus.CANCELLED }
-            return active.firstOrNull { it.start > now }
-                ?: active.firstOrNull { it.start <= now && it.end > now }
+            // The running lesson first, then the next one.
+            return active.firstOrNull { it.start <= now && it.end > now }
+                ?: active.firstOrNull { it.start > now }
         }
     }
 }

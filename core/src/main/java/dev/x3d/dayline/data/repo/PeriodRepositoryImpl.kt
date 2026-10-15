@@ -13,7 +13,14 @@ import dev.x3d.dayline.data.rpc.Totp
 import dev.x3d.dayline.data.rpc.WebUntisClient
 import dev.x3d.dayline.domain.PeriodException
 import dev.x3d.dayline.domain.PeriodRepository
+import dev.x3d.dayline.data.mapper.AbsenceMapper
+import dev.x3d.dayline.data.rpc.AbsenceDto
+import dev.x3d.dayline.domain.model.AbsenceReport
 import dev.x3d.dayline.domain.model.AuthKind
+import dev.x3d.dayline.domain.model.SchoolYear
+import java.time.LocalDate
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import dev.x3d.dayline.domain.model.Lesson
 import dev.x3d.dayline.domain.model.School
 import dev.x3d.dayline.domain.model.SyncState
@@ -41,6 +48,7 @@ class PeriodRepositoryImpl(
     private val credentials: CredentialStore,
     private val prefs: UserPrefs,
     private val watchPusher: WatchPusher?,
+    private val json: Json,
 ) : PeriodRepository {
 
     fun interface WatchPusher {
@@ -135,31 +143,7 @@ class PeriodRepositoryImpl(
             val skipFetch = !force && latest != null && latest == cachedImport &&
                 lessonDao.listRange(weekStart.yyyymmdd, weekEnd.yyyymmdd).isNotEmpty()
             if (!skipFetch) {
-                val periods = client.getTimetable(
-                    personId = current.personId,
-                    personType = current.personType,
-                    startDate = weekStart.yyyymmdd,
-                    endDate = weekEnd.yyyymmdd,
-                )
-                val lessons = periods.map(LessonMapper::toDomain)
-                lessonDao.deleteRange(weekStart.yyyymmdd, weekEnd.yyyymmdd)
-                lessonDao.upsertAll(lessons.map(LessonMapper::toEntity))
-                runCatching {
-                    val grid = client.getTimegridUnits().map(LessonMapper::toTimegrid)
-                    timegridDao.deleteAll()
-                    timegridDao.insertAll(
-                        grid.flatMap { day ->
-                            day.units.map { unit ->
-                                TimegridEntity(
-                                    weekday = day.weekday,
-                                    name = unit.name,
-                                    startTime = unit.start.raw,
-                                    endTime = unit.end.raw,
-                                )
-                            }
-                        },
-                    )
-                }
+                fetchRange(current, weekStart, weekEnd)
                 if (latest != null) {
                     metaDao.put(MetaEntity(META_IMPORT, latest, null))
                     prefs.setLastImportTime(latest)
@@ -194,6 +178,88 @@ class PeriodRepositoryImpl(
             }
             throw e
         }
+    }
+
+    private suspend fun fetchRange(session: UserSession, start: UntisDate, end: UntisDate) {
+        val periods = client.getTimetable(
+            personId = session.personId,
+            personType = session.personType,
+            startDate = start.yyyymmdd,
+            endDate = end.yyyymmdd,
+        )
+        val lessons = periods.map(LessonMapper::toDomain)
+        lessonDao.deleteRange(start.yyyymmdd, end.yyyymmdd)
+        lessonDao.upsertAll(lessons.map(LessonMapper::toEntity))
+        runCatching {
+            val grid = client.getTimegridUnits().map(LessonMapper::toTimegrid)
+            if (grid.isEmpty()) return@runCatching
+            timegridDao.deleteAll()
+            timegridDao.insertAll(
+                grid.flatMap { day ->
+                    day.units.map { unit ->
+                        TimegridEntity(
+                            weekday = day.weekday,
+                            name = unit.name,
+                            startTime = unit.start.raw,
+                            endTime = unit.end.raw,
+                        )
+                    }
+                },
+            )
+        }
+    }
+
+    override suspend fun loadWeek(monday: UntisDate) = mutex.withLock {
+        val current = sessionState.value ?: credentials.session ?: throw PeriodException.Auth("Not signed in")
+        fetchRange(current, monday, monday.plusDays(6))
+    }
+
+    override fun absences(): Flow<AbsenceReport?> =
+        metaDao.observe(META_ABSENCES).map { entity ->
+            val raw = entity?.stringValue ?: return@map null
+            runCatching { json.decodeFromString(AbsenceCache.serializer(), raw) }.getOrNull()?.toReport()
+        }
+
+    override suspend fun refreshAbsences() {
+        val current = sessionState.value ?: credentials.session ?: throw PeriodException.Auth("Not signed in")
+        val year = runCatching { client.getCurrentSchoolYear() }.getOrNull()
+        val (start, end) = if (year != null) {
+            year.startDate to year.endDate
+        } else {
+            fallbackSchoolYear()
+        }
+        val absences = client.getStudentAbsences(current.personId, start, end)
+        val cache = AbsenceCache(
+            yearName = year?.name.orEmpty(),
+            startDate = start,
+            endDate = end,
+            fetchedAt = System.currentTimeMillis(),
+            absences = absences,
+        )
+        metaDao.put(MetaEntity(META_ABSENCES, null, json.encodeToString(AbsenceCache.serializer(), cache)))
+    }
+
+    /** 1 Aug – 31 Jul around today, if the server has no current school year. */
+    private fun fallbackSchoolYear(): Pair<Int, Int> {
+        val today = LocalDate.now()
+        val startYear = if (today.monthValue >= 8) today.year else today.year - 1
+        return UntisDate.from(LocalDate.of(startYear, 8, 1)).yyyymmdd to
+            UntisDate.from(LocalDate.of(startYear + 1, 7, 31)).yyyymmdd
+    }
+
+    @Serializable
+    private data class AbsenceCache(
+        val yearName: String,
+        val startDate: Int,
+        val endDate: Int,
+        val fetchedAt: Long,
+        val absences: List<AbsenceDto>,
+    ) {
+        fun toReport() = AbsenceReport(
+            schoolYear = SchoolYear(yearName, UntisDate(startDate), UntisDate(endDate)),
+            absences = AbsenceMapper.sort(absences.map(AbsenceMapper::toDomain)),
+            fetchedAt = fetchedAt,
+        )
     }
 
     private suspend fun pushWatch(now: Long) {
@@ -245,5 +311,6 @@ class PeriodRepositoryImpl(
 
     companion object {
         private const val META_IMPORT = "latest_import_time"
+        private const val META_ABSENCES = "absences"
     }
 }

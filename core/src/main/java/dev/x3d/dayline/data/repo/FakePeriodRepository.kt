@@ -1,7 +1,11 @@
 package dev.x3d.dayline.data.repo
 
 import dev.x3d.dayline.domain.PeriodRepository
+import dev.x3d.dayline.domain.model.Absence
+import dev.x3d.dayline.domain.model.AbsenceReport
+import dev.x3d.dayline.domain.model.AbsenceStatus
 import dev.x3d.dayline.domain.model.Lesson
+import dev.x3d.dayline.domain.model.SchoolYear
 import dev.x3d.dayline.domain.model.LessonStatus
 import dev.x3d.dayline.domain.model.LessonType
 import dev.x3d.dayline.domain.model.NamedRef
@@ -68,6 +72,23 @@ class FakePeriodRepository(
 
     override suspend fun refresh(force: Boolean) {
         sync.update { it.copy(isSyncing = false, lastSuccessAt = System.currentTimeMillis(), fromCache = !force) }
+    }
+
+    override suspend fun loadWeek(monday: UntisDate) = Unit
+
+    private val absenceReport = MutableStateFlow<AbsenceReport?>(null)
+
+    override fun absences(): Flow<AbsenceReport?> = absenceReport
+
+    override suspend fun refreshAbsences() {
+        absenceReport.value = AbsenceReport(
+            schoolYear = SchoolYear("2026/2027", UntisDate(20260831), UntisDate(20270718)),
+            absences = listOf(
+                Absence(2, UntisDate(20260303), UntisDate(20260303), UntisTime(750), UntisTime(1305), "Krankheit", null, AbsenceStatus.EXCUSED, "entschuldigt"),
+                Absence(1, UntisDate(20260302), UntisDate(20260302), UntisTime(750), UntisTime(1305), "Krankheit", null, AbsenceStatus.EXCUSED, "entschuldigt"),
+            ),
+            fetchedAt = System.currentTimeMillis(),
+        )
     }
 
     override fun lessonsForDate(date: UntisDate): Flow<List<Lesson>> =

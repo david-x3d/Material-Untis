@@ -1,9 +1,15 @@
 package dev.x3d.dayline.ui
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarViewWeek
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sick
+import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Sick
 import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -15,7 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,13 +31,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dev.x3d.dayline.R
 import dev.x3d.dayline.domain.PeriodRepository
+import dev.x3d.dayline.ui.absences.AbsencesScreen
 import dev.x3d.dayline.ui.lesson.LessonScreen
 import dev.x3d.dayline.ui.login.LoginScreen
 import dev.x3d.dayline.ui.login.QrScanScreen
 import dev.x3d.dayline.ui.school.SchoolScreen
 import dev.x3d.dayline.ui.settings.SettingsScreen
 import dev.x3d.dayline.ui.today.TodayScreen
-import dev.x3d.dayline.ui.week.WeekScreen
+import dev.x3d.dayline.ui.timetable.TimetableScreen
 import org.koin.core.context.GlobalContext
 
 object Routes {
@@ -39,7 +46,8 @@ object Routes {
     const val LOGIN = "login"
     const val QR = "qr"
     const val TODAY = "today"
-    const val WEEK = "week"
+    const val TIMETABLE = "timetable"
+    const val ABSENCES = "absences"
     const val SETTINGS = "settings"
     const val LESSON = "lesson/{id}"
     fun lesson(id: Long) = "lesson/$id"
@@ -49,34 +57,30 @@ object Routes {
 fun DaylineRoot() {
     val repository = remember { GlobalContext.get().get<PeriodRepository>() }
     val nav = rememberNavController()
-    val start = if (repository.session.value == null) Routes.SCHOOL else Routes.TODAY
+    val start = if (repository.session.value == null) Routes.SCHOOL else Routes.TIMETABLE
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
-    val tabs = listOf(Routes.TODAY, Routes.WEEK, Routes.SETTINGS)
-    val showBar = route in tabs
+    val tabs = listOf(
+        Tab(Routes.TODAY, R.string.nav_today, Icons.Outlined.Today, Icons.Filled.Today),
+        Tab(Routes.TIMETABLE, R.string.nav_timetable, Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
+        Tab(Routes.ABSENCES, R.string.nav_absences, Icons.Outlined.Sick, Icons.Filled.Sick),
+        Tab(Routes.SETTINGS, R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
+    )
+    val showBar = tabs.any { it.route == route }
 
     Scaffold(
         bottomBar = {
             if (showBar) {
                 NavigationBar {
-                    NavigationBarItem(
-                        selected = route == Routes.TODAY,
-                        onClick = { nav.tab(Routes.TODAY) },
-                        icon = { Icon(Icons.Outlined.Today, contentDescription = null) },
-                        label = { Text(stringResource(R.string.nav_today)) },
-                    )
-                    NavigationBarItem(
-                        selected = route == Routes.WEEK,
-                        onClick = { nav.tab(Routes.WEEK) },
-                        icon = { Icon(Icons.Outlined.CalendarViewWeek, contentDescription = null) },
-                        label = { Text(stringResource(R.string.nav_week)) },
-                    )
-                    NavigationBarItem(
-                        selected = route == Routes.SETTINGS,
-                        onClick = { nav.tab(Routes.SETTINGS) },
-                        icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                        label = { Text(stringResource(R.string.nav_settings)) },
-                    )
+                    tabs.forEach { tab ->
+                        val selected = route == tab.route
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = { nav.tab(tab.route) },
+                            icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
+                            label = { Text(stringResource(tab.label)) },
+                        )
+                    }
                 }
             }
         },
@@ -84,7 +88,9 @@ fun DaylineRoot() {
         NavHost(
             navController = nav,
             startDestination = start,
-            modifier = Modifier.padding(padding),
+            modifier = Modifier
+                .padding(padding)
+                .consumeWindowInsets(padding),
         ) {
             composable(Routes.SCHOOL) {
                 SchoolScreen(onContinue = { nav.navigate(Routes.LOGIN) { popUpTo(Routes.SCHOOL) { inclusive = false } } })
@@ -92,7 +98,7 @@ fun DaylineRoot() {
             composable(Routes.LOGIN) {
                 LoginScreen(
                     onLoggedIn = {
-                        nav.navigate(Routes.TODAY) {
+                        nav.navigate(Routes.TIMETABLE) {
                             popUpTo(Routes.SCHOOL) { inclusive = true }
                         }
                     },
@@ -106,8 +112,11 @@ fun DaylineRoot() {
             composable(Routes.TODAY) {
                 TodayScreen(onLesson = { nav.navigate(Routes.lesson(it)) })
             }
-            composable(Routes.WEEK) {
-                WeekScreen(onLesson = { nav.navigate(Routes.lesson(it)) })
+            composable(Routes.TIMETABLE) {
+                TimetableScreen(onLesson = { nav.navigate(Routes.lesson(it)) })
+            }
+            composable(Routes.ABSENCES) {
+                AbsencesScreen()
             }
             composable(Routes.SETTINGS) {
                 SettingsScreen(
@@ -136,3 +145,10 @@ private fun androidx.navigation.NavHostController.tab(route: String) {
         restoreState = true
     }
 }
+
+private data class Tab(
+    val route: String,
+    val label: Int,
+    val icon: ImageVector,
+    val selectedIcon: ImageVector,
+)

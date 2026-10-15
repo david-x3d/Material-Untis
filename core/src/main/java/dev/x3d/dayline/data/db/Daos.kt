@@ -47,6 +47,9 @@ interface MetaDao {
     @Query("SELECT * FROM meta WHERE `key` = :key LIMIT 1")
     suspend fun get(key: String): MetaEntity?
 
+    @Query("SELECT * FROM meta WHERE `key` = :key LIMIT 1")
+    fun observe(key: String): Flow<MetaEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun put(entity: MetaEntity)
 

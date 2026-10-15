@@ -50,6 +50,7 @@ val coreModule = module {
             credentials = get(),
             prefs = get(),
             watchPusher = getOrNull<PeriodRepositoryImpl.WatchPusher>(),
+            json = get(),
         )
     }
 }

@@ -65,6 +65,7 @@ object LessonMapper {
         roomId = lesson.room?.id ?: 0,
         roomShort = lesson.room?.shortName.orEmpty(),
         roomLong = lesson.room?.longName.orEmpty(),
+        roomOriginal = lesson.room?.originalShortName,
         classId = lesson.klass?.id ?: 0,
         classShort = lesson.klass?.shortName.orEmpty(),
         status = lesson.status.name,
@@ -86,7 +87,7 @@ object LessonMapper {
             NamedRef(entity.teacherId, it, entity.teacherLong.ifEmpty { it }, entity.teacherOriginal)
         },
         room = entity.roomShort.takeIf { it.isNotEmpty() }?.let {
-            NamedRef(entity.roomId, it, entity.roomLong.ifEmpty { it })
+            NamedRef(entity.roomId, it, entity.roomLong.ifEmpty { it }, entity.roomOriginal)
         },
         klass = entity.classShort.takeIf { it.isNotEmpty() }?.let {
             NamedRef(entity.classId, it, it)

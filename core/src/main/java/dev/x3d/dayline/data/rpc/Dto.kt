@@ -131,3 +131,45 @@ data class TimetableElement(
     val id: Int,
     val type: Int,
 )
+
+@Serializable
+data class SchoolYearDto(
+    val id: Int? = null,
+    val name: String? = null,
+    val startDate: Int,
+    val endDate: Int,
+)
+
+/** `GET /WebUntis/api/classreg/absences/students` → `{"data": {"absences": [...]}}` */
+@Serializable
+data class AbsencesEnvelope(
+    val data: AbsencesData? = null,
+)
+
+@Serializable
+data class AbsencesData(
+    val absences: List<AbsenceDto> = emptyList(),
+)
+
+@Serializable
+data class AbsenceDto(
+    val id: Long = 0,
+    val startDate: Int,
+    val endDate: Int,
+    val startTime: Int = 0,
+    val endTime: Int = 0,
+    // These are loosely typed on purpose: servers differ (string vs. object vs. null).
+    val reason: JsonElement? = null,
+    val text: JsonElement? = null,
+    val excuseStatus: JsonElement? = null,
+    val isExcused: Boolean = false,
+    val excuse: ExcuseDto? = null,
+)
+
+@Serializable
+data class ExcuseDto(
+    val id: Long? = null,
+    val text: JsonElement? = null,
+    val excuseStatus: JsonElement? = null,
+    val isExcused: Boolean = false,
+)
