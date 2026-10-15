@@ -80,4 +80,21 @@
     <string name="account_teacher">Teacher</string>
     <string name="account_parent">Parent</string>
     <string name="account_other">Account</string>
+    <string name="report_action">Report sick</string>
+    <string name="report_title">Report absence</string>
+    <string name="report_from">From</string>
+    <string name="report_to">To</string>
+    <string name="report_whole_day">Whole school day</string>
+    <string name="report_reason">Reason</string>
+    <string name="report_text">Note (optional)</string>
+    <string name="report_send">Send to school</string>
+    <string name="report_confirm_title">Send to school?</string>
+    <string name="report_confirm">%1$s until %2$s
+Reason: %3$s
+
+This is sent to your school like in WebUntis.</string>
+    <string name="report_sent">Absence reported</string>
+    <string name="report_not_allowed">Your school does not allow reporting absences with this account.</string>
+    <string name="report_error_auth">The school rejected the request. Sign in again and retry.</string>
+    <string name="report_error">Could not send: %1$s</string>
 </resources>

@@ -15,7 +15,12 @@ import dev.x3d.dayline.domain.PeriodException
 import dev.x3d.dayline.domain.PeriodRepository
 import dev.x3d.dayline.data.mapper.AbsenceMapper
 import dev.x3d.dayline.data.rpc.AbsenceDto
+import dev.x3d.dayline.data.rpc.ReportAbsenceRequest
+import dev.x3d.dayline.domain.model.AbsenceReason
 import dev.x3d.dayline.domain.model.AbsenceReport
+import dev.x3d.dayline.domain.model.AbsenceReportOptions
+import dev.x3d.dayline.domain.model.AccountType
+import dev.x3d.dayline.domain.time.UntisTime
 import dev.x3d.dayline.domain.model.AuthKind
 import dev.x3d.dayline.domain.model.SchoolYear
 import java.time.LocalDate
@@ -81,16 +86,16 @@ class PeriodRepositoryImpl(
         client.connection = WebUntisClient.Connection(school.host, school.loginName)
     }
 
-    override suspend fun loginPassword(user: String, password: String) {
-        login(user, password, AuthKind.PASSWORD, storeSecret = password)
+    override suspend fun loginPassword(user: String, password: String, accountType: AccountType?) {
+        login(user, password, AuthKind.PASSWORD, storeSecret = password, hint = accountType)
     }
 
-    override suspend fun loginSecret(user: String, secret: String) {
+    override suspend fun loginSecret(user: String, secret: String, accountType: AccountType?) {
         val otp = Totp.generate(secret)
-        login(user, otp, AuthKind.SECRET, storeSecret = secret)
+        login(user, otp, AuthKind.SECRET, storeSecret = secret, hint = accountType)
     }
 
-    private suspend fun login(user: String, passwordOrOtp: String, kind: AuthKind, storeSecret: String) {
+    private suspend fun login(user: String, passwordOrOtp: String, kind: AuthKind, storeSecret: String, hint: AccountType?) {
         val school = credentials.school ?: throw PeriodException.Auth("Select a school first")
         val auth = client.authenticate(school.host, school.loginName, user, passwordOrOtp)
         credentials.saveCredentials(user, storeSecret, kind)
@@ -102,10 +107,40 @@ class PeriodRepositoryImpl(
             personType = auth.personType,
             personId = auth.personId,
             klasseId = auth.klasseId,
-        )
+        ).withLinkedStudent(hint)
         credentials.session = session
         sessionState.value = session
         refresh(force = true)
+    }
+
+    /**
+     * Parent accounts act for a child: the web app lists them as `persons` (type 5) in embedded.do.
+     * Teachers and students act for themselves.
+     */
+    private suspend fun UserSession.withLinkedStudent(hint: AccountType?): UserSession {
+        if (personType == UserSession.PERSON_STUDENT) {
+            return copy(accountType = AccountType.STUDENT, studentId = personId)
+        }
+        if (personType == UserSession.PERSON_TEACHER) return copy(accountType = AccountType.TEACHER)
+        val context = runCatching { client.getWebContext(refresh = true) }.getOrNull()
+        val child = context?.persons?.firstOrNull { it.type == UserSession.PERSON_STUDENT }
+        return when {
+            child != null -> copy(accountType = AccountType.PARENT, studentId = child.id, studentName = child.displayName)
+            hint != null -> copy(accountType = hint)
+            else -> this
+        }
+    }
+
+    /** Sessions saved before linked students existed get their child looked up once. */
+    private suspend fun currentSession(): UserSession {
+        val current = sessionState.value ?: credentials.session ?: throw PeriodException.Auth("Not signed in")
+        if (current.studentId != null || current.personType == UserSession.PERSON_TEACHER) return current
+        val updated = current.withLinkedStudent(hint = null)
+        if (updated != current) {
+            credentials.session = updated
+            sessionState.value = updated
+        }
+        return updated
     }
 
     private suspend fun silentReauth() {
@@ -134,7 +169,9 @@ class PeriodRepositoryImpl(
     }
 
     override suspend fun refresh(force: Boolean) = mutex.withLock {
-        val current = sessionState.value ?: credentials.session ?: throw PeriodException.Auth("Not signed in")
+        val current = runCatching { currentSession() }.getOrElse {
+            sessionState.value ?: credentials.session ?: throw PeriodException.Auth("Not signed in")
+        }
         syncStateFlow.update { it.copy(isSyncing = true, lastError = null) }
         try {
             val (weekStart, weekEnd) = UntisDate.weekRange()
@@ -181,9 +218,10 @@ class PeriodRepositoryImpl(
     }
 
     private suspend fun fetchRange(session: UserSession, start: UntisDate, end: UntisDate) {
+        val (elementId, elementType) = session.timetableElement
         val periods = client.getTimetable(
-            personId = session.personId,
-            personType = session.personType,
+            personId = elementId,
+            personType = elementType,
             startDate = start.yyyymmdd,
             endDate = end.yyyymmdd,
         )
@@ -210,7 +248,7 @@ class PeriodRepositoryImpl(
     }
 
     override suspend fun loadWeek(monday: UntisDate) = mutex.withLock {
-        val current = sessionState.value ?: credentials.session ?: throw PeriodException.Auth("Not signed in")
+        val current = currentSession()
         fetchRange(current, monday, monday.plusDays(6))
     }
 
@@ -221,14 +259,14 @@ class PeriodRepositoryImpl(
         }
 
     override suspend fun refreshAbsences() {
-        val current = sessionState.value ?: credentials.session ?: throw PeriodException.Auth("Not signed in")
+        val current = currentSession()
         val year = runCatching { client.getCurrentSchoolYear() }.getOrNull()
         val (start, end) = if (year != null) {
             year.startDate to year.endDate
         } else {
             fallbackSchoolYear()
         }
-        val absences = client.getStudentAbsences(current.personId, start, end)
+        val absences = client.getStudentAbsences(current.studentId ?: current.personId, start, end)
         val cache = AbsenceCache(
             yearName = year?.name.orEmpty(),
             startDate = start,
@@ -237,6 +275,40 @@ class PeriodRepositoryImpl(
             absences = absences,
         )
         metaDao.put(MetaEntity(META_ABSENCES, null, json.encodeToString(AbsenceCache.serializer(), cache)))
+    }
+
+    override suspend fun absenceReportOptions(): AbsenceReportOptions {
+        val meta = client.getAbsenceMeta()
+        return AbsenceReportOptions(
+            canReport = meta.canReportAbsence,
+            reasons = meta.absenceReasons.map { AbsenceReason(it.id, it.name) },
+            defaultReasonId = meta.defaultAbsenceReason?.id ?: meta.absenceReasons.firstOrNull()?.id,
+            reasonAndTextHidden = meta.isAbsenceReasonAndTextHidden,
+        )
+    }
+
+    override suspend fun reportAbsence(
+        startDate: UntisDate,
+        startTime: UntisTime,
+        endDate: UntisDate,
+        endTime: UntisTime,
+        reasonId: Int,
+        text: String,
+    ) {
+        val current = currentSession()
+        val studentId = current.studentId ?: current.personId
+        client.reportAbsence(
+            ReportAbsenceRequest(
+                startDate = startDate.yyyymmdd,
+                startTime = startTime.raw,
+                endDate = endDate.yyyymmdd,
+                endTime = endTime.raw,
+                text = text,
+                reasonId = reasonId,
+                studentId = studentId,
+            ),
+        )
+        runCatching { refreshAbsences() }
     }
 
     /** 1 Aug – 31 Jul around today, if the server has no current school year. */

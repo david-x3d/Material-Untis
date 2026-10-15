@@ -1,6 +1,8 @@
 package dev.x3d.dayline.domain
 
 import dev.x3d.dayline.domain.model.AbsenceReport
+import dev.x3d.dayline.domain.model.AbsenceReportOptions
+import dev.x3d.dayline.domain.model.AccountType
 import dev.x3d.dayline.domain.model.Lesson
 import dev.x3d.dayline.domain.model.School
 import dev.x3d.dayline.domain.model.SyncState
@@ -8,6 +10,7 @@ import dev.x3d.dayline.domain.model.TimegridDay
 import dev.x3d.dayline.domain.model.UserSession
 import dev.x3d.dayline.domain.model.WatchStatus
 import dev.x3d.dayline.domain.time.UntisDate
+import dev.x3d.dayline.domain.time.UntisTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -19,8 +22,9 @@ interface PeriodRepository {
 
     suspend fun searchSchools(query: String): List<School>
     suspend fun saveSchool(school: School)
-    suspend fun loginPassword(user: String, password: String)
-    suspend fun loginSecret(user: String, secret: String)
+    /** [accountType] is what the user picked in onboarding; the server's answer wins when it is clear. */
+    suspend fun loginPassword(user: String, password: String, accountType: AccountType? = null)
+    suspend fun loginSecret(user: String, secret: String, accountType: AccountType? = null)
     suspend fun logout()
     suspend fun refresh(force: Boolean = false)
 
@@ -30,6 +34,19 @@ interface PeriodRepository {
     /** Cached absences of the current school year (null until fetched once). */
     fun absences(): Flow<AbsenceReport?>
     suspend fun refreshAbsences()
+
+    /** Whether and how this account may report absences ("Krankmeldung"). */
+    suspend fun absenceReportOptions(): AbsenceReportOptions
+
+    /** Sends an absence report to the school, then reloads the absence list. */
+    suspend fun reportAbsence(
+        startDate: UntisDate,
+        startTime: UntisTime,
+        endDate: UntisDate,
+        endTime: UntisTime,
+        reasonId: Int,
+        text: String,
+    )
     fun lessonsForDate(date: UntisDate): Flow<List<Lesson>>
     fun lessonsInRange(start: UntisDate, end: UntisDate): Flow<List<Lesson>>
     fun lesson(id: Long): Flow<Lesson?>

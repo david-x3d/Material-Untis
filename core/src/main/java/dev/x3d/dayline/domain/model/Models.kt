@@ -74,13 +74,36 @@ data class UserSession(
     val personType: Int,
     val personId: Int,
     val klasseId: Int?,
+    val accountType: AccountType = AccountType.fromPersonType(personType),
+    /** The student whose timetable and absences are shown (the child, for parent accounts). */
+    val studentId: Int? = if (personType == PERSON_STUDENT) personId else null,
+    val studentName: String? = null,
 ) {
     val isStudent: Boolean get() = personType == PERSON_STUDENT
+
+    /** Element for getTimetable: the linked student if there is one, else the account itself. */
+    val timetableElement: Pair<Int, Int>
+        get() = if (accountType == AccountType.PARENT && studentId != null) studentId to PERSON_STUDENT else personId to personType
 
     companion object {
         const val PERSON_TEACHER = 2
         const val PERSON_STUDENT = 5
         const val PERSON_PARENT = 12
+    }
+}
+
+enum class AccountType {
+    STUDENT,
+    PARENT,
+    TEACHER,
+    ;
+
+    companion object {
+        fun fromPersonType(personType: Int): AccountType = when (personType) {
+            UserSession.PERSON_TEACHER -> TEACHER
+            UserSession.PERSON_PARENT -> PARENT
+            else -> STUDENT
+        }
     }
 }
 
@@ -126,6 +149,16 @@ data class Absence(
     val status: AbsenceStatus,
     /** Status text as the school wrote it, e.g. "entschuldigt". */
     val statusLabel: String?,
+)
+
+data class AbsenceReason(val id: Int, val name: String)
+
+/** What the school allows for reporting absences, from `absences/meta`. */
+data class AbsenceReportOptions(
+    val canReport: Boolean,
+    val reasons: List<AbsenceReason>,
+    val defaultReasonId: Int?,
+    val reasonAndTextHidden: Boolean,
 )
 
 data class AbsenceReport(

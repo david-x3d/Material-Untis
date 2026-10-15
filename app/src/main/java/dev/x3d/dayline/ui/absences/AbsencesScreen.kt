@@ -2,22 +2,22 @@ package dev.x3d.dayline.ui.absences
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -25,34 +25,40 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Sick
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.x3d.dayline.R
@@ -69,59 +75,85 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun AbsencesScreen(viewModel: AbsencesViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(Modifier.fillMaxSize()) {
-        ScreenTopBar(
-            title = stringResource(R.string.absences_title),
-            subtitle = state.report?.schoolYear?.let { year -> "${formatDate(year.start)} – ${formatDate(year.end)}" },
-        )
-        val pullState = rememberPullToRefreshState()
-        val refreshing = state.loading && state.report != null
-        PullToRefreshBox(
-            isRefreshing = refreshing,
-            onRefresh = viewModel::refresh,
-            state = pullState,
-            modifier = Modifier.fillMaxSize(),
-            indicator = {
-                PullToRefreshDefaults.LoadingIndicator(
-                    state = pullState,
-                    isRefreshing = refreshing,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                )
-            },
-        ) {
-            LazyColumn(
+    val reportForm by viewModel.reportForm.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+    val sentMessage = stringResource(R.string.report_sent)
+    LaunchedEffect(Unit) {
+        viewModel.sent.collect { snackbar.showSnackbar(sentMessage) }
+    }
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
+            ScreenTopBar(
+                title = stringResource(R.string.absences_title),
+                subtitle = state.report?.schoolYear?.let { year -> "${formatDate(year.start)} – ${formatDate(year.end)}" },
+            )
+            val pullState = rememberPullToRefreshState()
+            val refreshing = state.loading && state.report != null
+            PullToRefreshBox(
+                isRefreshing = refreshing,
+                onRefresh = viewModel::refresh,
+                state = pullState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                indicator = {
+                    PullToRefreshDefaults.LoadingIndicator(
+                        state = pullState,
+                        isRefreshing = refreshing,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
+                },
             ) {
-                state.error?.let { error ->
-                    item { ErrorCard(error, onRetry = viewModel::refresh) }
-                }
-                if (state.report == null && state.loading) {
-                    item {
-                        Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
-                            LoadingIndicator()
-                        }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    state.error?.let { error ->
+                        item { ErrorCard(error, onRetry = viewModel::refresh) }
                     }
-                }
-                if (state.report != null) {
-                    item { FilterBar(state, viewModel::setFilter) }
-                    if (state.visible.isEmpty()) {
+                    if (state.report == null && state.loading) {
                         item {
-                            Text(
-                                stringResource(if (state.all.isEmpty()) R.string.absences_empty else R.string.absences_filter_empty),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth().padding(32.dp),
-                            )
+                            Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
+                                LoadingIndicator()
+                            }
                         }
                     }
-                    items(state.visible, key = { it.id to it.startDate.yyyymmdd }) { absence ->
-                        AbsenceCard(absence)
+                    if (state.report != null) {
+                        item { FilterBar(state, viewModel::setFilter) }
+                        if (state.visible.isEmpty()) {
+                            item {
+                                Text(
+                                    stringResource(if (state.all.isEmpty()) R.string.absences_empty else R.string.absences_filter_empty),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                )
+                            }
+                        }
+                        items(state.visible, key = { it.id to it.startDate.yyyymmdd }) { absence ->
+                            AbsenceCard(absence)
+                        }
                     }
                 }
             }
         }
+        ExtendedFloatingActionButton(
+            onClick = viewModel::openReport,
+            icon = { Icon(Icons.Outlined.Sick, contentDescription = null) },
+            text = { Text(stringResource(R.string.report_action)) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+        )
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+    }
+
+    reportForm?.let { form ->
+        ReportAbsenceSheet(
+            form = form,
+            onChange = viewModel::updateReport,
+            onSend = viewModel::sendReport,
+            onDismiss = viewModel::closeReport,
+        )
     }
 }
 

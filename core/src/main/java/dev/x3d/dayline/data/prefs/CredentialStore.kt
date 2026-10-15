@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import dev.x3d.dayline.domain.model.AccountType
 import dev.x3d.dayline.domain.model.AuthKind
 import dev.x3d.dayline.domain.model.School
 import dev.x3d.dayline.domain.model.UserSession
@@ -63,19 +64,34 @@ class CredentialStore(context: Context) {
                 personType = prefs.getInt(KEY_PERSON_TYPE, UserSession.PERSON_STUDENT),
                 personId = prefs.getInt(KEY_PERSON_ID, 0),
                 klasseId = if (prefs.contains(KEY_KLASSE_ID)) prefs.getInt(KEY_KLASSE_ID, 0) else null,
+                accountType = prefs.getString(KEY_ACCOUNT_TYPE, null)
+                    ?.let { runCatching { AccountType.valueOf(it) }.getOrNull() }
+                    ?: AccountType.fromPersonType(prefs.getInt(KEY_PERSON_TYPE, UserSession.PERSON_STUDENT)),
+                studentId = if (prefs.contains(KEY_STUDENT_ID)) {
+                    prefs.getInt(KEY_STUDENT_ID, 0)
+                } else if (prefs.getInt(KEY_PERSON_TYPE, 0) == UserSession.PERSON_STUDENT) {
+                    prefs.getInt(KEY_PERSON_ID, 0)
+                } else {
+                    null
+                },
+                studentName = prefs.getString(KEY_STUDENT_NAME, null),
             )
         }
         set(value) {
             val editor = prefs.edit()
             if (value == null) {
                 editor.remove(KEY_PERSON_ID).remove(KEY_PERSON_TYPE).remove(KEY_KLASSE_ID)
+                    .remove(KEY_ACCOUNT_TYPE).remove(KEY_STUDENT_ID).remove(KEY_STUDENT_NAME)
             } else {
                 editor
                     .putInt(KEY_PERSON_ID, value.personId)
                     .putInt(KEY_PERSON_TYPE, value.personType)
                     .apply {
                         if (value.klasseId != null) putInt(KEY_KLASSE_ID, value.klasseId) else remove(KEY_KLASSE_ID)
+                        if (value.studentId != null) putInt(KEY_STUDENT_ID, value.studentId) else remove(KEY_STUDENT_ID)
+                        if (value.studentName != null) putString(KEY_STUDENT_NAME, value.studentName) else remove(KEY_STUDENT_NAME)
                     }
+                    .putString(KEY_ACCOUNT_TYPE, value.accountType.name)
             }
             editor.apply()
         }
@@ -96,6 +112,9 @@ class CredentialStore(context: Context) {
         private const val KEY_PERSON_ID = "person_id"
         private const val KEY_PERSON_TYPE = "person_type"
         private const val KEY_KLASSE_ID = "klasse_id"
+        private const val KEY_ACCOUNT_TYPE = "account_type"
+        private const val KEY_STUDENT_ID = "student_id"
+        private const val KEY_STUDENT_NAME = "student_name"
 
         private fun createPrefs(context: Context): SharedPreferences {
             return try {

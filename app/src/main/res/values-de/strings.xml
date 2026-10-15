@@ -79,4 +79,21 @@
     <string name="account_teacher">Lehrkraft</string>
     <string name="account_parent">Eltern</string>
     <string name="account_other">Konto</string>
+    <string name="report_action">Krank melden</string>
+    <string name="report_title">Abwesenheit melden</string>
+    <string name="report_from">Von</string>
+    <string name="report_to">Bis</string>
+    <string name="report_whole_day">Ganzer Schultag</string>
+    <string name="report_reason">Grund</string>
+    <string name="report_text">Notiz (optional)</string>
+    <string name="report_send">An Schule senden</string>
+    <string name="report_confirm_title">An die Schule senden?</string>
+    <string name="report_confirm">%1$s bis %2$s
+Grund: %3$s
+
+Das wird wie in WebUntis an deine Schule gesendet.</string>
+    <string name="report_sent">Abwesenheit gemeldet</string>
+    <string name="report_not_allowed">Deine Schule erlaubt mit diesem Konto keine Abwesenheitsmeldung.</string>
+    <string name="report_error_auth">Die Schule hat die Anfrage abgelehnt. Bitte neu anmelden und nochmal versuchen.</string>
+    <string name="report_error">Senden fehlgeschlagen: %1$s</string>
 </resources>

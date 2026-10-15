@@ -173,3 +173,45 @@ data class ExcuseDto(
     val excuseStatus: JsonElement? = null,
     val isExcused: Boolean = false,
 )
+
+/** A person the web user may act for (`grupet.loginServiceConfig.user.persons` in embedded.do). */
+@Serializable
+data class WebPersonDto(
+    val id: Int,
+    val type: Int,
+    val displayName: String? = null,
+)
+
+/** `GET /WebUntis/api/classreg/absences/meta` → `{"data": {...}}` */
+@Serializable
+data class AbsenceMetaEnvelope(
+    val data: AbsenceMetaDto? = null,
+)
+
+@Serializable
+data class AbsenceMetaDto(
+    val absenceReasons: List<AbsenceReasonDto> = emptyList(),
+    val defaultAbsenceReason: AbsenceReasonDto? = null,
+    val canReportAbsence: Boolean = false,
+    val isAbsenceReasonAndTextHidden: Boolean = false,
+    val defaultStartTime: Int? = null,
+    val defaultEndTime: Int? = null,
+)
+
+@Serializable
+data class AbsenceReasonDto(
+    val id: Int,
+    val name: String = "",
+)
+
+/** Body of `POST /WebUntis/api/classreg/absences/students/self` (same as the web app sends). */
+@Serializable
+data class ReportAbsenceRequest(
+    val startDate: Int,
+    val startTime: Int,
+    val endDate: Int,
+    val endTime: Int,
+    val text: String,
+    val reasonId: Int,
+    val studentId: Int,
+)

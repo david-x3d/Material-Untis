@@ -6,6 +6,7 @@ import java.net.URLEncoder
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -43,6 +44,7 @@ class WebUntisClient(
     suspend fun authenticate(host: String, school: String, user: String, password: String): AuthenticateResult {
         connection = Connection(normalizeHost(host), school)
         cookieJar.clear()
+        webContext = null
         val params = json.encodeToJsonElement(AuthenticateParams(user = user, password = password, client = CLIENT_ID))
         val result = call("authenticate", params, retryAuth = false)
         val auth = json.decodeFromJsonElement<AuthenticateResult>(result)
@@ -83,6 +85,74 @@ class WebUntisClient(
         return json.decodeFromJsonElement(result)
     }
 
+    /** CSRF token, tenant and linked students, as the web app gets them from `embedded.do`. */
+    data class WebContext(
+        val csrfToken: String?,
+        val tenantId: String?,
+        val roleId: Int?,
+        val persons: List<WebPersonDto>,
+    )
+
+    @Volatile
+    private var webContext: WebContext? = null
+
+    suspend fun getWebContext(refresh: Boolean = false, retryAuth: Boolean = true): WebContext {
+        if (!refresh) webContext?.let { return it }
+        val conn = connection ?: throw PeriodException.Auth("No school selected")
+        val url = "https://${normalizeHost(conn.host)}/WebUntis/embedded.do".toHttpUrl()
+            .newBuilder().addQueryParameter("showSidebar", "false").build()
+        val html = try {
+            restGet(url, expectJson = false)
+        } catch (e: PeriodException.SessionExpired) {
+            val reauth = reauthenticator
+            if (!retryAuth || reauth == null) throw e
+            reauth.reauthenticate()
+            return getWebContext(refresh = true, retryAuth = false)
+        }
+        val context = parseWebContext(html)
+        // Logged out: the login page has no token.
+        if (context.csrfToken == null) {
+            val reauth = reauthenticator
+            if (!retryAuth || reauth == null) throw PeriodException.SessionExpired()
+            reauth.reauthenticate()
+            return getWebContext(refresh = true, retryAuth = false)
+        }
+        webContext = context
+        return context
+    }
+
+    suspend fun getAbsenceMeta(): AbsenceMetaDto {
+        val conn = connection ?: throw PeriodException.Auth("No school selected")
+        val url = "https://${normalizeHost(conn.host)}/WebUntis/api/classreg/absences/meta".toHttpUrl()
+        val text = withSessionRetry { restGet(url, tenantId = getWebContext().tenantId) }
+        return json.decodeFromString(AbsenceMetaEnvelope.serializer(), text).data
+            ?: throw PeriodException.Rpc(0, text.take(200))
+    }
+
+    /** Reports an absence ("Krankmeldung") exactly like the web app. */
+    suspend fun reportAbsence(request: ReportAbsenceRequest) {
+        val conn = connection ?: throw PeriodException.Auth("No school selected")
+        val url = "https://${normalizeHost(conn.host)}/WebUntis/api/classreg/absences/students/self".toHttpUrl()
+        val body = json.encodeToString(ReportAbsenceRequest.serializer(), request)
+        try {
+            restPost(url, body, getWebContext())
+        } catch (e: PeriodException.SessionExpired) {
+            // Expired session or stale CSRF token: sign in again, fetch a fresh token, retry once.
+            reauthenticator?.reauthenticate() ?: throw e
+            restPost(url, body, getWebContext(refresh = true))
+        }
+    }
+
+    private suspend fun withSessionRetry(block: suspend () -> String): String =
+        try {
+            block()
+        } catch (e: PeriodException.SessionExpired) {
+            val reauth = reauthenticator ?: throw e
+            reauth.reauthenticate()
+            webContext = null
+            block()
+        }
+
     suspend fun getCurrentSchoolYear(): SchoolYearDto? {
         val result = call("getCurrentSchoolyear", JsonObject(emptyMap()))
         if (result is JsonNull) return null
@@ -110,24 +180,46 @@ class WebUntisClient(
         return data.absences
     }
 
-    private suspend fun restGet(url: HttpUrl): String = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url(url)
-            .get()
-            .header("Accept", "application/json")
-            .build()
+    private suspend fun restGet(url: HttpUrl, expectJson: Boolean = true, tenantId: String? = null): String =
+        withContext(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .header("Accept", if (expectJson) "application/json" else "text/html")
+                .apply { if (tenantId != null) header("Tenant-Id", tenantId) }
+                .build()
+            execute(request, expectJson)
+        }
+
+    private suspend fun restPost(url: HttpUrl, body: String, context: WebContext): String =
+        withContext(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url(url)
+                .post(body.toRequestBody(JSON_MEDIA))
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .apply {
+                    context.csrfToken?.let { header("X-CSRF-TOKEN", it) }
+                    context.tenantId?.let { header("Tenant-Id", it) }
+                }
+                .build()
+            execute(request, expectJson = false)
+        }
+
+    private fun execute(request: Request, expectJson: Boolean): String {
         try {
             http.newCall(request).execute().use { httpResponse ->
                 if (httpResponse.code == 401 || httpResponse.code == 403) {
                     throw PeriodException.SessionExpired()
                 }
+                val text = httpResponse.body?.string().orEmpty()
                 if (!httpResponse.isSuccessful) {
+                    if (httpResponse.code in 400..499) throw PeriodException.Rpc(httpResponse.code, errorMessage(text))
                     throw PeriodException.Network(IOException("HTTP ${httpResponse.code}"))
                 }
-                val text = httpResponse.body?.string().orEmpty()
                 // An expired session is answered with the HTML login page instead of JSON.
-                if (!text.trimStart().startsWith("{")) throw PeriodException.SessionExpired()
-                text
+                if (expectJson && !text.trimStart().startsWith("{")) throw PeriodException.SessionExpired()
+                return text
             }
         } catch (e: PeriodException) {
             throw e
@@ -135,6 +227,11 @@ class WebUntisClient(
             throw PeriodException.Network(e)
         }
     }
+
+    /** WebUntis REST errors look like `{"errorMessage": "..."}` or `{"errors":[{"title": "..."}]}`. */
+    private fun errorMessage(text: String): String =
+        Regex("\"(?:errorMessage|message|title|detail)\"\\s*:\\s*\"([^\"]+)\"").find(text)?.groupValues?.get(1)
+            ?: text.take(200)
 
     suspend fun call(method: String, params: JsonElement, retryAuth: Boolean = true): JsonElement {
         val response = execute(method, params)
@@ -210,6 +307,37 @@ class WebUntisClient(
                 .addQueryParameter("studentId", studentId.toString())
                 .addQueryParameter("excuseStatusId", "-1")
                 .build()
+
+        fun parseWebContext(html: String): WebContext {
+            fun str(key: String) = Regex("\"$key\"\\s*:\\s*\"([^\"]*)\"").find(html)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
+            val roleId = Regex("\"roleId\"\\s*:\\s*(\\d+)").find(html)?.groupValues?.get(1)?.toIntOrNull()
+            val persons = arrayAfter(html, "\"persons\"")?.let { raw ->
+                runCatching { LENIENT.decodeFromString(ListSerializer(WebPersonDto.serializer()), raw) }.getOrNull()
+            }.orEmpty()
+            return WebContext(str("csrfToken"), str("tenantId"), roleId, persons)
+        }
+
+        /** The JSON array that follows [key], by bracket matching (the page embeds a JS object). */
+        private fun arrayAfter(text: String, key: String): String? {
+            val keyAt = text.indexOf(key).takeIf { it >= 0 } ?: return null
+            val start = text.indexOf('[', keyAt).takeIf { it >= 0 } ?: return null
+            var depth = 0
+            var inString = false
+            var i = start
+            while (i < text.length) {
+                val c = text[i]
+                when {
+                    inString && c == '\\' -> i++
+                    c == '"' -> inString = !inString
+                    !inString && c == '[' -> depth++
+                    !inString && c == ']' -> if (--depth == 0) return text.substring(start, i + 1)
+                }
+                i++
+            }
+            return null
+        }
+
+        private val LENIENT = Json { ignoreUnknownKeys = true; isLenient = true }
 
         fun isAuthError(error: JsonRpcError): Boolean {
             val message = error.message.orEmpty().lowercase()

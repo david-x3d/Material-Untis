@@ -2,7 +2,10 @@ package dev.x3d.dayline.data.repo
 
 import dev.x3d.dayline.domain.PeriodRepository
 import dev.x3d.dayline.domain.model.Absence
+import dev.x3d.dayline.domain.model.AbsenceReason
 import dev.x3d.dayline.domain.model.AbsenceReport
+import dev.x3d.dayline.domain.model.AbsenceReportOptions
+import dev.x3d.dayline.domain.model.AccountType
 import dev.x3d.dayline.domain.model.AbsenceStatus
 import dev.x3d.dayline.domain.model.Lesson
 import dev.x3d.dayline.domain.model.SchoolYear
@@ -51,7 +54,7 @@ class FakePeriodRepository(
         this.school.value = school
     }
 
-    override suspend fun loginPassword(user: String, password: String) {
+    override suspend fun loginPassword(user: String, password: String, accountType: AccountType?) {
         sessionState.value = UserSession(
             host = school.value?.host ?: "ajax.webuntis.com",
             school = school.value?.loginName ?: "example",
@@ -63,7 +66,7 @@ class FakePeriodRepository(
         )
     }
 
-    override suspend fun loginSecret(user: String, secret: String) = loginPassword(user, secret)
+    override suspend fun loginSecret(user: String, secret: String, accountType: AccountType?) = loginPassword(user, secret, accountType)
 
     override suspend fun logout() {
         sessionState.value = null
@@ -91,6 +94,22 @@ class FakePeriodRepository(
             fetchedAt = System.currentTimeMillis(),
         )
     }
+
+    override suspend fun absenceReportOptions() = AbsenceReportOptions(
+        canReport = true,
+        reasons = listOf(AbsenceReason(1, "Krankheit"), AbsenceReason(2, "Arzttermin")),
+        defaultReasonId = 1,
+        reasonAndTextHidden = false,
+    )
+
+    override suspend fun reportAbsence(
+        startDate: UntisDate,
+        startTime: UntisTime,
+        endDate: UntisDate,
+        endTime: UntisTime,
+        reasonId: Int,
+        text: String,
+    ) = Unit
 
     override fun lessonsForDate(date: UntisDate): Flow<List<Lesson>> =
         lessons.map { list -> list.filter { it.date == date }.sortedBy { it.start.raw } }
