@@ -132,6 +132,16 @@ data class TimetableElement(
     val type: Int,
 )
 
+/** `getHolidays`: one entry per holiday period of the school, e.g. "Herbst" / "Herbstferien". */
+@Serializable
+data class HolidayDto(
+    val id: Int? = null,
+    val name: String? = null,
+    val longName: String? = null,
+    val startDate: Int,
+    val endDate: Int,
+)
+
 @Serializable
 data class SchoolYearDto(
     val id: Int? = null,

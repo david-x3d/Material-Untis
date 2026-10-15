@@ -28,6 +28,10 @@
     <string name="timetable_week_number">KW %1$d</string>
     <string name="timetable_week_empty">Diese Woche kein Unterricht.</string>
     <string name="timetable_this_week">Diese Woche</string>
+    <string name="timetable_locked_title">Anzeige gesperrt</string>
+    <string name="timetable_locked_body">Deine Schule hat die Stundenplananzeige für diese Woche eingeschränkt.</string>
+    <string name="timetable_holiday">Ferien</string>
+    <string name="timetable_holiday_range">%1$s bis\n%2$s</string>
     <string name="lesson_teacher">Lehrkraft</string>
     <string name="lesson_room">Raum</string>
     <string name="lesson_class">Klasse</string>

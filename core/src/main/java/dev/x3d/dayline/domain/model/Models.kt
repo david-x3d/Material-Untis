@@ -66,6 +66,18 @@ data class TimegridDay(
     val units: List<TimegridUnit>,
 )
 
+/** A school holiday period ("Ferien"), inclusive on both ends. */
+data class Holiday(
+    val name: String,
+    val longName: String,
+    val start: UntisDate,
+    val end: UntisDate,
+) {
+    val label: String get() = longName.ifBlank { name }
+
+    operator fun contains(date: UntisDate): Boolean = date in start..end
+}
+
 data class UserSession(
     val host: String,
     val school: String,

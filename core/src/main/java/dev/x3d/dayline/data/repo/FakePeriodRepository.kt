@@ -7,6 +7,7 @@ import dev.x3d.dayline.domain.model.AbsenceReport
 import dev.x3d.dayline.domain.model.AbsenceReportOptions
 import dev.x3d.dayline.domain.model.AccountType
 import dev.x3d.dayline.domain.model.AbsenceStatus
+import dev.x3d.dayline.domain.model.Holiday
 import dev.x3d.dayline.domain.model.Lesson
 import dev.x3d.dayline.domain.model.SchoolYear
 import dev.x3d.dayline.domain.model.LessonStatus
@@ -134,6 +135,8 @@ class FakePeriodRepository(
             ),
         ),
     )
+
+    override fun holidays(): Flow<List<Holiday>> = flowOf(emptyList())
 
     override suspend fun setSyncIntervalMinutes(minutes: Int) {
         interval.value = minutes

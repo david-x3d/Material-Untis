@@ -1,5 +1,6 @@
 package dev.x3d.dayline.ui.timetable
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -23,7 +24,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BeachAccess
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -49,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.x3d.dayline.R
 import dev.x3d.dayline.domain.PeriodException
+import dev.x3d.dayline.domain.model.Holiday
 import dev.x3d.dayline.domain.model.LessonStatus
 import dev.x3d.dayline.domain.model.LessonType
 import dev.x3d.dayline.domain.model.NamedRef
@@ -66,6 +71,7 @@ import dev.x3d.dayline.domain.time.UntisDate
 import dev.x3d.dayline.domain.time.UntisTime
 import dev.x3d.dayline.ui.components.ScreenTopBar
 import dev.x3d.dayline.ui.theme.subjectColor
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.time.temporal.IsoFields
 import java.util.Locale
@@ -75,6 +81,7 @@ import org.koin.androidx.compose.koinViewModel
 
 private const val CENTER_PAGE = 520
 private val TIME_COLUMN = 52.dp
+private const val HOLIDAY_MIN_HEIGHT = 480f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +91,7 @@ fun TimetableScreen(
 ) {
     val session by viewModel.session.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
+    val locked by viewModel.locked.collectAsStateWithLifecycle()
     val pager = rememberPagerState(initialPage = CENTER_PAGE) { CENTER_PAGE * 2 }
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
@@ -134,6 +142,7 @@ fun TimetableScreen(
                     week = week,
                     today = today,
                     refreshing = monday in loading,
+                    locked = monday in locked,
                     onRefresh = { viewModel.refresh(monday) },
                     onLesson = onLesson,
                 )
@@ -150,6 +159,7 @@ private fun WeekPage(
     week: WeekData?,
     today: UntisDate,
     refreshing: Boolean,
+    locked: Boolean,
     onRefresh: () -> Unit,
     onLesson: (Long) -> Unit,
 ) {
@@ -171,22 +181,58 @@ private fun WeekPage(
             },
         ) {
             if (week != null && week.isEmpty && !refreshing) {
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        stringResource(R.string.timetable_week_empty),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                if (locked) {
+                    WeekMessage(
+                        title = stringResource(R.string.timetable_locked_title),
+                        body = stringResource(R.string.timetable_locked_body),
+                        icon = Icons.Outlined.Lock,
                     )
+                } else {
+                    WeekMessage(title = stringResource(R.string.timetable_week_empty))
                 }
             } else if (week != null) {
                 WeekGrid(week, today, onLesson)
             }
+        }
+    }
+}
+
+/** Centred message instead of the grid: an empty week, or one the school does not publish. */
+@Composable
+private fun WeekMessage(title: String, body: String? = null, icon: ImageVector? = null) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (icon != null) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.padding(top = 48.dp, bottom = 8.dp).size(72.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        Text(
+            title,
+            style = if (body != null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
+            fontWeight = if (body != null) FontWeight.Bold else null,
+            color = if (body != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        if (body != null) {
+            Text(
+                body,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
@@ -267,7 +313,8 @@ private fun WeekGrid(week: WeekData, today: UntisDate, onLesson: (Long) -> Unit)
         BoxWithConstraints(
             Modifier
                 .weight(1f)
-                .height(axis.totalHeight.dp)
+                // Without a time grid, a holiday-only week would otherwise have no height.
+                .height(maxOf(axis.totalHeight, if (week.holidays.isEmpty()) 0f else HOLIDAY_MIN_HEIGHT).dp)
                 .padding(end = 4.dp),
         ) {
             val columnWidth = maxWidth / week.days.size
@@ -286,6 +333,16 @@ private fun WeekGrid(week: WeekData, today: UntisDate, onLesson: (Long) -> Unit)
                             .width(columnWidth)
                             .fillMaxHeight()
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.06f), RoundedCornerShape(16.dp)),
+                    )
+                }
+                week.holidays[day]?.let { holiday ->
+                    HolidayColumn(
+                        holiday,
+                        Modifier
+                            .offset(x = columnWidth * dayIndex)
+                            .width(columnWidth)
+                            .fillMaxHeight()
+                            .padding(2.dp),
                     )
                 }
                 week.blocksByDay[day].orEmpty().forEach { placed ->
@@ -310,6 +367,44 @@ private fun WeekGrid(week: WeekData, today: UntisDate, onLesson: (Long) -> Unit)
                     )
                 }
             }
+        }
+    }
+}
+
+/** A whole day of school holidays, like the "Ferien" column of the official app. */
+@Composable
+private fun HolidayColumn(holiday: Holiday, modifier: Modifier) {
+    val pattern = remember { DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), "dMM")) }
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    ) {
+        Column(
+            Modifier.padding(horizontal = 2.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(Icons.Outlined.BeachAccess, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(
+                stringResource(R.string.timetable_holiday),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(holiday.label, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+            Text(
+                stringResource(
+                    R.string.timetable_holiday_range,
+                    holiday.start.toLocalDate().format(pattern),
+                    holiday.end.toLocalDate().format(pattern),
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

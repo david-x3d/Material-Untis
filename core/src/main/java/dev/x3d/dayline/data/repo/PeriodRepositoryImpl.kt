@@ -15,6 +15,9 @@ import dev.x3d.dayline.domain.PeriodException
 import dev.x3d.dayline.domain.PeriodRepository
 import dev.x3d.dayline.data.mapper.AbsenceMapper
 import dev.x3d.dayline.data.rpc.AbsenceDto
+import dev.x3d.dayline.data.rpc.HolidayDto
+import dev.x3d.dayline.domain.model.Holiday
+import kotlinx.serialization.builtins.ListSerializer
 import dev.x3d.dayline.data.rpc.ReportAbsenceRequest
 import dev.x3d.dayline.domain.model.AbsenceReason
 import dev.x3d.dayline.domain.model.AbsenceReport
@@ -220,6 +223,8 @@ class PeriodRepositoryImpl(
     }
 
     private suspend fun fetchRange(session: UserSession, start: UntisDate, end: UntisDate) {
+        // Before the timetable: weeks the school locks (-7004) still get their holidays.
+        refreshHolidays()
         val (elementId, elementType) = session.timetableElement
         val periods = client.getTimetable(
             personId = elementId,
@@ -248,6 +253,28 @@ class PeriodRepositoryImpl(
             )
         }
     }
+
+    /** Holidays change rarely: fetched at most every [HOLIDAY_MAX_AGE_MS]. Failures keep the cache. */
+    private suspend fun refreshHolidays() {
+        val fetchedAt = metaDao.get(META_HOLIDAYS)?.longValue ?: 0L
+        val now = System.currentTimeMillis()
+        if (now - fetchedAt < HOLIDAY_MAX_AGE_MS) return
+        val holidays = runCatching { client.getHolidays() }.getOrNull() ?: return
+        metaDao.put(MetaEntity(META_HOLIDAYS, now, json.encodeToString(HOLIDAY_LIST, holidays)))
+    }
+
+    override fun holidays(): Flow<List<Holiday>> =
+        metaDao.observe(META_HOLIDAYS).map { entity ->
+            val raw = entity?.stringValue ?: return@map emptyList()
+            runCatching { json.decodeFromString(HOLIDAY_LIST, raw) }.getOrDefault(emptyList()).map { dto ->
+                Holiday(
+                    name = dto.name.orEmpty(),
+                    longName = dto.longName.orEmpty(),
+                    start = UntisDate(dto.startDate),
+                    end = UntisDate(dto.endDate),
+                )
+            }
+        }
 
     override suspend fun loadWeek(monday: UntisDate) = mutex.withLock {
         val current = currentSession()
@@ -391,5 +418,8 @@ class PeriodRepositoryImpl(
     companion object {
         private const val META_IMPORT = "latest_import_time"
         private const val META_ABSENCES = "absences"
+        private const val META_HOLIDAYS = "holidays"
+        private const val HOLIDAY_MAX_AGE_MS = 12 * 60 * 60 * 1000L
+        private val HOLIDAY_LIST = ListSerializer(HolidayDto.serializer())
     }
 }

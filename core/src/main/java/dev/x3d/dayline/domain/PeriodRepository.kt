@@ -3,6 +3,7 @@ package dev.x3d.dayline.domain
 import dev.x3d.dayline.domain.model.AbsenceReport
 import dev.x3d.dayline.domain.model.AbsenceReportOptions
 import dev.x3d.dayline.domain.model.AccountType
+import dev.x3d.dayline.domain.model.Holiday
 import dev.x3d.dayline.domain.model.Lesson
 import dev.x3d.dayline.domain.model.NamedRef
 import dev.x3d.dayline.domain.model.School
@@ -52,6 +53,9 @@ interface PeriodRepository {
     fun lessonsInRange(start: UntisDate, end: UntisDate): Flow<List<Lesson>>
     fun lesson(id: Long): Flow<Lesson?>
     fun timegrid(): Flow<List<TimegridDay>>
+
+    /** Cached school holidays ("Ferien"), refreshed along with the timetable. */
+    fun holidays(): Flow<List<Holiday>>
 
     /** Subjects in the cached timetable (short + long name), for the colour settings. */
     fun subjects(): Flow<List<NamedRef>>

@@ -153,6 +153,12 @@ class WebUntisClient(
             block()
         }
 
+    suspend fun getHolidays(): List<HolidayDto> {
+        val result = call("getHolidays", JsonObject(emptyMap()))
+        if (result is JsonNull) return emptyList()
+        return json.decodeFromJsonElement(result)
+    }
+
     suspend fun getCurrentSchoolYear(): SchoolYearDto? {
         val result = call("getCurrentSchoolyear", JsonObject(emptyMap()))
         if (result is JsonNull) return null
@@ -245,6 +251,7 @@ class WebUntisClient(
         }
         if (response.error != null) {
             if (isAuthError(response.error)) throw PeriodException.SessionExpired()
+            if (response.error.code == NO_ALLOWED_DATE) throw PeriodException.DateNotAllowed()
             throw PeriodException.Rpc(response.error.code, response.error.message ?: "Unknown RPC error")
         }
         return response.result ?: JsonNull
@@ -286,6 +293,7 @@ class WebUntisClient(
     companion object {
         private val JSON_MEDIA = "application/json; charset=utf-8".toMediaType()
         private val AUTH_CODES = setOf(-8504, -8520, -8521)
+        private const val NO_ALLOWED_DATE = -7004
 
         fun normalizeHost(host: String): String {
             var value = host.trim()

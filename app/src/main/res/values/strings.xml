@@ -29,6 +29,10 @@
     <string name="timetable_week_number">W %1$d</string>
     <string name="timetable_week_empty">No lessons this week.</string>
     <string name="timetable_this_week">This week</string>
+    <string name="timetable_locked_title">Timetable locked</string>
+    <string name="timetable_locked_body">Your school has restricted the timetable for this week.</string>
+    <string name="timetable_holiday">Holidays</string>
+    <string name="timetable_holiday_range">%1$s –\n%2$s</string>
     <string name="lesson_teacher">Teacher</string>
     <string name="lesson_room">Room</string>
     <string name="lesson_class">Class</string>
