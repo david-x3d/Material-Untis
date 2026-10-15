@@ -6,11 +6,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sick
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Sick
-import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -37,7 +35,6 @@ import dev.x3d.dayline.ui.login.LoginScreen
 import dev.x3d.dayline.ui.login.QrScanScreen
 import dev.x3d.dayline.ui.school.SchoolScreen
 import dev.x3d.dayline.ui.settings.SettingsScreen
-import dev.x3d.dayline.ui.today.TodayScreen
 import dev.x3d.dayline.ui.timetable.TimetableScreen
 import org.koin.core.context.GlobalContext
 
@@ -45,7 +42,6 @@ object Routes {
     const val SCHOOL = "school"
     const val LOGIN = "login"
     const val QR = "qr"
-    const val TODAY = "today"
     const val TIMETABLE = "timetable"
     const val ABSENCES = "absences"
     const val SETTINGS = "settings"
@@ -61,7 +57,6 @@ fun DaylineRoot() {
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     val tabs = listOf(
-        Tab(Routes.TODAY, R.string.nav_today, Icons.Outlined.Today, Icons.Filled.Today),
         Tab(Routes.TIMETABLE, R.string.nav_timetable, Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
         Tab(Routes.ABSENCES, R.string.nav_absences, Icons.Outlined.Sick, Icons.Filled.Sick),
         Tab(Routes.SETTINGS, R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
@@ -108,9 +103,6 @@ fun DaylineRoot() {
             }
             composable(Routes.QR) {
                 QrScanScreen(onDone = { nav.popBackStack() })
-            }
-            composable(Routes.TODAY) {
-                TodayScreen(onLesson = { nav.navigate(Routes.lesson(it)) })
             }
             composable(Routes.TIMETABLE) {
                 TimetableScreen(onLesson = { nav.navigate(Routes.lesson(it)) })

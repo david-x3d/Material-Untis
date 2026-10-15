@@ -3,6 +3,7 @@ package dev.x3d.dayline.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.x3d.dayline.domain.PeriodRepository
+import dev.x3d.dayline.domain.model.SyncState
 import dev.x3d.dayline.domain.model.UserSession
 import dev.x3d.dayline.domain.model.WatchStatus
 import dev.x3d.dayline.sync.SyncScheduler
@@ -16,6 +17,7 @@ data class SettingsUiState(
     val session: UserSession? = null,
     val interval: Int = 15,
     val watch: WatchStatus = WatchStatus(),
+    val sync: SyncState = SyncState(),
 )
 
 class SettingsViewModel(
@@ -26,8 +28,9 @@ class SettingsViewModel(
         repository.session,
         repository.syncIntervalMinutes(),
         repository.watchStatus,
-    ) { session, interval, watch ->
-        SettingsUiState(session, interval, watch)
+        repository.syncState,
+    ) { session, interval, watch, sync ->
+        SettingsUiState(session, interval, watch, sync)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState(session = repository.session.value))
 
     fun setInterval(minutes: Int) {
@@ -35,6 +38,11 @@ class SettingsViewModel(
             repository.setSyncIntervalMinutes(minutes)
             syncScheduler.schedulePeriodic(minutes)
         }
+    }
+
+    /** Fetches the timetable now and sends it to the watch. */
+    fun syncNow() {
+        viewModelScope.launch { runCatching { repository.refresh(force = true) } }
     }
 
     fun logout(onDone: () -> Unit) {

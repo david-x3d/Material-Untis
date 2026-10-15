@@ -11,6 +11,9 @@ object WatchPayloadCodec {
     const val PATH = "/dayline/today"
     const val KEY_BYTES = "payload"
 
+    /** Message the watch sends to ask the phone for a fresh payload. */
+    const val SYNC_REQUEST_PATH = "/dayline/sync"
+
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true

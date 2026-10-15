@@ -2,8 +2,16 @@
 <resources>
     <string name="app_name">Material-Untis</string>
     <string name="wear_next">Next</string>
-    <string name="wear_empty">No lessons yet. Sync from the phone.</string>
-    <string name="wear_done">No more lessons</string>
+    <string name="wear_now">Now</string>
+    <string name="wear_starts_in">Starts in %1$d min</string>
+    <string name="wear_ends_in">%1$d min left</string>
+    <string name="wear_empty">No timetable for today yet. Open Material-Untis on your phone.</string>
+    <string name="wear_no_phone">Phone not reachable. Is Material-Untis installed there and Bluetooth on?</string>
+    <string name="wear_free">No lessons today.</string>
+    <string name="wear_done">No more lessons today</string>
+    <string name="wear_sync">Sync</string>
+    <string name="wear_syncing">Syncing…</string>
+    <string name="wear_synced">Synced %1$s</string>
     <string name="complication_label">Next lesson</string>
     <string name="status_cancelled">Cancelled</string>
 </resources>

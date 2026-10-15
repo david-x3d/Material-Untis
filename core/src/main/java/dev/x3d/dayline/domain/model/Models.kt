@@ -80,6 +80,7 @@ data class UserSession(
     companion object {
         const val PERSON_TEACHER = 2
         const val PERSON_STUDENT = 5
+        const val PERSON_PARENT = 12
     }
 }
 

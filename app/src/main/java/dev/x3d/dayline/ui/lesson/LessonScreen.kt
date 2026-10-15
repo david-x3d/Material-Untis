@@ -51,6 +51,7 @@ import dev.x3d.dayline.R
 import dev.x3d.dayline.domain.model.LessonStatus
 import dev.x3d.dayline.domain.model.LessonType
 import dev.x3d.dayline.domain.model.NamedRef
+import dev.x3d.dayline.ui.components.SegmentedGroup
 import dev.x3d.dayline.ui.timetable.subjectColor
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -180,25 +181,6 @@ fun LessonScreen(
             )
             if (notes.isNotEmpty()) {
                 SegmentedGroup(notes.map { (label, text) -> { DetailRow(Icons.Outlined.Info, label, text, null) } })
-            }
-        }
-    }
-}
-
-@Composable
-private fun SegmentedGroup(rows: List<@Composable () -> Unit>) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        rows.forEachIndexed { index, row ->
-            val big = 24.dp
-            val small = 6.dp
-            val shape = RoundedCornerShape(
-                topStart = if (index == 0) big else small,
-                topEnd = if (index == 0) big else small,
-                bottomStart = if (index == rows.lastIndex) big else small,
-                bottomEnd = if (index == rows.lastIndex) big else small,
-            )
-            Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
-                row()
             }
         }
     }

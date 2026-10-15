@@ -10,7 +10,7 @@ import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 import dev.x3d.dayline.R
 import dev.x3d.dayline.data.WearTimetableStore
-import dev.x3d.dayline.domain.model.WatchPeriod
+import dev.x3d.dayline.domain.time.UntisDate
 import dev.x3d.dayline.domain.time.UntisTime
 import kotlinx.coroutines.flow.first
 import org.koin.android.ext.android.inject
@@ -25,7 +25,8 @@ class NextLessonComplicationService : SuspendingComplicationDataSourceService() 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData {
         val payload = store.payload.first()
         val now = UntisTime.now()
-        val next = payload?.periods
+        // Yesterday's payload must not show up as today's lessons.
+        val next = payload?.takeIf { it.date == UntisDate.today().yyyymmdd }?.periods
             ?.filter { it.status != "cancelled" }
             ?.firstOrNull { it.end > now.raw }
         val text = if (next == null) {

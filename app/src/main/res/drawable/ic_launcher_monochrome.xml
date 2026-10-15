@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material-Untis logo (branding/logo.svg): week columns, today's double period, "now" line. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M36,31 h3 a5,5 0 0 1 5,5 v10 a5,5 0 0 1 -5,5 h-3 a5,5 0 0 1 -5,-5 v-10 a5,5 0 0 1 5,-5 z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M36,55 h3 a5,5 0 0 1 5,5 v12 a5,5 0 0 1 -5,5 h-3 a5,5 0 0 1 -5,-5 v-12 a5,5 0 0 1 5,-5 z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M69,31 h3 a5,5 0 0 1 5,5 v2 a5,5 0 0 1 -5,5 h-3 a5,5 0 0 1 -5,-5 v-2 a5,5 0 0 1 5,-5 z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M69,47 h3 a5,5 0 0 1 5,5 v20 a5,5 0 0 1 -5,5 h-3 a5,5 0 0 1 -5,-5 v-20 a5,5 0 0 1 5,-5 z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M54.0,31 h0.0 a6.5,6.5 0 0 1 6.5,6.5 v33.0 a6.5,6.5 0 0 1 -6.5,6.5 h-0.0 a6.5,6.5 0 0 1 -6.5,-6.5 v-33.0 a6.5,6.5 0 0 1 6.5,-6.5 z" />
+    <path
+        android:pathData="M30,53 H78"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M24.8,53 a4.2,4.2 0 1 0 8.4,0 a4.2,4.2 0 1 0 -8.4,0 z" />
+</vector>

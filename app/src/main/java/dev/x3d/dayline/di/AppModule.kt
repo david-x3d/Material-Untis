@@ -9,7 +9,6 @@ import dev.x3d.dayline.ui.login.LoginViewModel
 import dev.x3d.dayline.ui.login.QrDraftStore
 import dev.x3d.dayline.ui.school.SchoolViewModel
 import dev.x3d.dayline.ui.settings.SettingsViewModel
-import dev.x3d.dayline.ui.today.TodayViewModel
 import dev.x3d.dayline.ui.timetable.TimetableViewModel
 import dev.x3d.dayline.wear.WearableWatchPusher
 import org.koin.android.ext.koin.androidContext
@@ -23,7 +22,6 @@ val appModule = module {
     single { QrDraftStore() }
     viewModel { SchoolViewModel(get()) }
     viewModel { LoginViewModel(get(), get(), get()) }
-    viewModel { TodayViewModel(get()) }
     viewModel { TimetableViewModel(get()) }
     viewModel { AbsencesViewModel(get()) }
     viewModel { LessonViewModel(get()) }

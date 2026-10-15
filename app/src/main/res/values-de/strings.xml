@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_today">Heute</string>
     <string name="nav_timetable">Stundenplan</string>
     <string name="nav_absences">Abwesenheiten</string>
     <string name="nav_settings">Einstellungen</string>
@@ -26,17 +25,9 @@
     <string name="login_camera_denied">Die Kamera ist optional. Schlüssel stattdessen einfügen.</string>
     <string name="qr_title">Login-QR scannen</string>
     <string name="qr_invalid">Das ist kein Schul-Login-QR.</string>
-    <string name="today_title">Heute</string>
-    <string name="today_empty">Heute kein Unterricht.</string>
-    <string name="today_next">Als Nächstes</string>
-    <string name="today_now">Jetzt</string>
-    <string name="today_done">Fertig</string>
-    <string name="starts_in">Beginnt in %1$d min</string>
-    <string name="ends_in">Endet in %1$d min</string>
     <string name="timetable_week_number">KW %1$d</string>
     <string name="timetable_week_empty">Diese Woche kein Unterricht.</string>
     <string name="timetable_this_week">Diese Woche</string>
-    <string name="lesson_title">Stunde</string>
     <string name="lesson_teacher">Lehrkraft</string>
     <string name="lesson_room">Raum</string>
     <string name="lesson_class">Klasse</string>
@@ -67,16 +58,28 @@
     <string name="settings_title">Einstellungen</string>
     <string name="settings_account">Konto</string>
     <string name="settings_sync">Synchronisierung</string>
-    <string name="settings_sync_15">15 Minuten</string>
-    <string name="settings_sync_30">30 Minuten</string>
-    <string name="settings_sync_60">60 Minuten</string>
+    <string name="settings_sync_15">15 Min.</string>
+    <string name="settings_sync_30">30 Min.</string>
+    <string name="settings_sync_60">60 Min.</string>
     <string name="settings_watch">Uhr</string>
-    <string name="settings_watch_unknown">Noch nichts gesendet. Öffne die Uhr-App, nachdem Material-Untis auf dem Handy installiert ist.</string>
-    <string name="settings_watch_ok">Stundenplan zuletzt gesendet um %1$s</string>
+    <string name="settings_watch_ok">An Uhr gesendet um %1$s</string>
     <string name="settings_logout">Abmelden</string>
     <string name="settings_privacy">Zugangsdaten bleiben auf diesem Gerät. Die Uhr meldet sich nie an.</string>
     <string name="offline_banner">Offline – gespeicherter Stundenplan</string>
     <string name="error_retry">Erneut versuchen</string>
     <string name="error_generic">Etwas ist schiefgelaufen.</string>
     <string name="change_school">Schule ändern</string>
+    <string name="settings_sync_interval">Automatisch aktualisieren alle</string>
+    <string name="settings_last_sync">Zuletzt synchronisiert %1$s</string>
+    <string name="settings_never_synced">Noch nicht synchronisiert</string>
+    <string name="settings_sync_now">Jetzt</string>
+    <string name="settings_watch_none">Noch nichts gesendet</string>
+    <string name="settings_watch_hint">Der heutige Plan wird nach jeder Synchronisierung gesendet.</string>
+    <string name="settings_privacy_title">Datenschutz</string>
+    <string name="settings_logout_confirm_title">Abmelden?</string>
+    <string name="settings_logout_confirm">Gespeicherter Stundenplan und Anmeldedaten werden von diesem Gerät gelöscht.</string>
+    <string name="account_student">Schüler:in</string>
+    <string name="account_teacher">Lehrkraft</string>
+    <string name="account_parent">Eltern</string>
+    <string name="account_other">Konto</string>
 </resources>

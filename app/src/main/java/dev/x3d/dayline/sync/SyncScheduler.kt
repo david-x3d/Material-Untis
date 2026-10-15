@@ -25,14 +25,9 @@ class SyncScheduler(private val context: Context) {
         workManager.enqueueUniquePeriodicWork(UNIQUE, ExistingPeriodicWorkPolicy.UPDATE, request)
     }
 
+    /** No network constraint: offline, the sync still pushes the cached day to the watch. */
     fun runNow() {
-        val request = OneTimeWorkRequestBuilder<TimetableSyncWorker>()
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build(),
-            )
-            .build()
+        val request = OneTimeWorkRequestBuilder<TimetableSyncWorker>().build()
         workManager.enqueueUniqueWork(UNIQUE_ONCE, ExistingWorkPolicy.REPLACE, request)
     }
 

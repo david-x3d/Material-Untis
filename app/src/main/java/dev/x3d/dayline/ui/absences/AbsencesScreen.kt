@@ -1,6 +1,11 @@
 package dev.x3d.dayline.ui.absences
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,8 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -55,6 +60,7 @@ import dev.x3d.dayline.domain.PeriodException
 import dev.x3d.dayline.domain.model.Absence
 import dev.x3d.dayline.domain.model.AbsenceStatus
 import dev.x3d.dayline.domain.time.UntisDate
+import dev.x3d.dayline.ui.components.ScreenTopBar
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import org.koin.androidx.compose.koinViewModel
@@ -65,19 +71,9 @@ fun AbsencesScreen(viewModel: AbsencesViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var filterOpen by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = {
-                Column {
-                    Text(stringResource(R.string.absences_title), style = MaterialTheme.typography.titleLarge)
-                    state.report?.schoolYear?.let { year ->
-                        Text(
-                            "${formatDate(year.start)} – ${formatDate(year.end)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            },
+        ScreenTopBar(
+            title = stringResource(R.string.absences_title),
+            subtitle = state.report?.schoolYear?.let { year -> "${formatDate(year.start)} – ${formatDate(year.end)}" },
             actions = {
                 Box {
                     IconButton(onClick = { filterOpen = true }) {
@@ -201,22 +197,42 @@ private fun StatTile(label: String, value: Int, container: Color, content: Color
 
 @Composable
 private fun AbsenceCard(absence: Absence) {
-    Card(
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+    val icon = when (absence.status) {
+        AbsenceStatus.EXCUSED -> Icons.Outlined.CheckCircle
+        AbsenceStatus.UNEXCUSED -> Icons.Outlined.Close
+        AbsenceStatus.OPEN -> Icons.Outlined.HourglassEmpty
+    }
+    val tint = when (absence.status) {
+        AbsenceStatus.EXCUSED -> MaterialTheme.colorScheme.primary
+        AbsenceStatus.UNEXCUSED -> MaterialTheme.colorScheme.error
+        AbsenceStatus.OPEN -> MaterialTheme.colorScheme.tertiary
+    }
+    val fallback = when (absence.status) {
+        AbsenceStatus.EXCUSED -> R.string.absence_excused
+        AbsenceStatus.UNEXCUSED -> R.string.absence_unexcused
+        AbsenceStatus.OPEN -> R.string.absence_open
+    }
+    // Same look as a timetable block: tonal surface with a coloured stripe.
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(dateRange(absence), style = MaterialTheme.typography.titleLarge)
-            Line(Icons.Outlined.Schedule, "${absence.start.format()} – ${absence.end.format()}")
-            absence.reason?.let { Line(Icons.Outlined.Info, it) }
-            absence.text?.let { Line(Icons.AutoMirrored.Outlined.Notes, it) }
-            val (icon, tint, fallback) = when (absence.status) {
-                AbsenceStatus.EXCUSED -> Triple(Icons.Outlined.CheckCircle, MaterialTheme.colorScheme.primary, R.string.absence_excused)
-                AbsenceStatus.UNEXCUSED -> Triple(Icons.Outlined.Close, MaterialTheme.colorScheme.error, R.string.absence_unexcused)
-                AbsenceStatus.OPEN -> Triple(Icons.Outlined.HourglassEmpty, MaterialTheme.colorScheme.tertiary, R.string.absence_open)
+        Row(Modifier.height(IntrinsicSize.Min)) {
+            Box(
+                Modifier
+                    .padding(start = 8.dp, top = 12.dp, bottom = 12.dp)
+                    .width(5.dp)
+                    .fillMaxHeight()
+                    .background(tint, CircleShape),
+            )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(dateRange(absence), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                Line(Icons.Outlined.Schedule, "${absence.start.format()} – ${absence.end.format()}")
+                absence.reason?.let { Line(Icons.Outlined.Info, it) }
+                absence.text?.let { Line(Icons.AutoMirrored.Outlined.Notes, it) }
+                Line(icon, absence.statusLabel ?: stringResource(fallback), tint)
             }
-            Line(icon, absence.statusLabel ?: stringResource(fallback), tint)
         }
     }
 }

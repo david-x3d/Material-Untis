@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_next">Als Nächstes</string>
+    <string name="wear_now">Jetzt</string>
+    <string name="wear_starts_in">In %1$d Min.</string>
+    <string name="wear_ends_in">Noch %1$d Min.</string>
+    <string name="wear_empty">Noch kein Plan für heute. Öffne Material-Untis auf dem Handy.</string>
+    <string name="wear_no_phone">Handy nicht erreichbar. Ist Material-Untis dort installiert und Bluetooth an?</string>
+    <string name="wear_free">Heute kein Unterricht.</string>
+    <string name="wear_done">Heute keine Stunden mehr</string>
+    <string name="wear_sync">Sync</string>
+    <string name="wear_syncing">Lädt…</string>
+    <string name="wear_synced">Synchronisiert %1$s</string>
+    <string name="complication_label">Nächste Stunde</string>
+    <string name="status_cancelled">Entfällt</string>
+</resources>

@@ -7,7 +7,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dev.x3d.dayline.data.wear.WatchPayloadCodec
 import dev.x3d.dayline.domain.model.WatchPayload
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 class WearTimetableStore(context: Context) {
@@ -15,9 +18,11 @@ class WearTimetableStore(context: Context) {
         context.preferencesDataStoreFile("dayline_watch")
     }
 
-    val payload: Flow<WatchPayload?> = store.data.map { prefs ->
-        prefs[BYTES]?.let { runCatching { WatchPayloadCodec.decode(it) }.getOrNull() }
-    }
+    // Decoded off the main thread, once per change.
+    val payload: Flow<WatchPayload?> = store.data
+        .map { prefs -> prefs[BYTES]?.let { runCatching { WatchPayloadCodec.decode(it) }.getOrNull() } }
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.Default)
 
     suspend fun save(bytes: ByteArray) {
         store.edit { it[BYTES] = bytes }

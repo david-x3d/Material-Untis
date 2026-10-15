@@ -85,8 +85,8 @@ class TimeAxis(val slots: List<Slot>) {
         slots.isNotEmpty() && time >= slots.first().start && time <= slots.last().end
 
     companion object {
-        const val DP_PER_MIN = 1.4f
-        const val MIN_SLOT = 56f
+        const val DP_PER_MIN = 1.5f
+        const val MIN_SLOT = 62f
         const val GAP_DP_PER_MIN = 1.1f
         const val MIN_GAP = 6f
         const val MAX_GAP = 26f

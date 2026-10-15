@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Material-Untis</string>
-    <string name="nav_today">Today</string>
     <string name="nav_timetable">Timetable</string>
     <string name="nav_absences">Absences</string>
     <string name="nav_settings">Settings</string>
@@ -27,17 +26,9 @@
     <string name="login_camera_denied">Camera permission is optional. Paste the secret instead.</string>
     <string name="qr_title">Scan login QR</string>
     <string name="qr_invalid">That code is not a school login QR.</string>
-    <string name="today_title">Today</string>
-    <string name="today_empty">No lessons today.</string>
-    <string name="today_next">Next</string>
-    <string name="today_now">Now</string>
-    <string name="today_done">Finished</string>
-    <string name="starts_in">Starts in %1$d min</string>
-    <string name="ends_in">Ends in %1$d min</string>
     <string name="timetable_week_number">W %1$d</string>
     <string name="timetable_week_empty">No lessons this week.</string>
     <string name="timetable_this_week">This week</string>
-    <string name="lesson_title">Lesson</string>
     <string name="lesson_teacher">Teacher</string>
     <string name="lesson_room">Room</string>
     <string name="lesson_class">Class</string>
@@ -67,17 +58,29 @@
     <string name="absences_error">Could not load absences: %1$s</string>
     <string name="settings_title">Settings</string>
     <string name="settings_account">Account</string>
-    <string name="settings_sync">Sync interval</string>
-    <string name="settings_sync_15">15 minutes</string>
-    <string name="settings_sync_30">30 minutes</string>
-    <string name="settings_sync_60">60 minutes</string>
+    <string name="settings_sync">Sync</string>
+    <string name="settings_sync_15">15 min</string>
+    <string name="settings_sync_30">30 min</string>
+    <string name="settings_sync_60">60 min</string>
     <string name="settings_watch">Watch</string>
-    <string name="settings_watch_unknown">No recent push. Open the watch app after installing Material-Untis on the phone.</string>
-    <string name="settings_watch_ok">Last timetable sent %1$s</string>
+    <string name="settings_watch_ok">Sent to watch at %1$s</string>
     <string name="settings_logout">Log out</string>
     <string name="settings_privacy">Credentials stay on this device. The watch never signs in.</string>
     <string name="offline_banner">Offline — showing saved timetable</string>
     <string name="error_retry">Try again</string>
     <string name="error_generic">Something went wrong.</string>
     <string name="change_school">Change school</string>
+    <string name="settings_sync_interval">Update automatically every</string>
+    <string name="settings_last_sync">Last synced %1$s</string>
+    <string name="settings_never_synced">Not synced yet</string>
+    <string name="settings_sync_now">Sync now</string>
+    <string name="settings_watch_none">Nothing sent yet</string>
+    <string name="settings_watch_hint">Today’s timetable is sent after every sync.</string>
+    <string name="settings_privacy_title">Privacy</string>
+    <string name="settings_logout_confirm_title">Log out?</string>
+    <string name="settings_logout_confirm">Your saved timetable and sign-in data will be removed from this device.</string>
+    <string name="account_student">Student</string>
+    <string name="account_teacher">Teacher</string>
+    <string name="account_parent">Parent</string>
+    <string name="account_other">Account</string>
 </resources>

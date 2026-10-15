@@ -35,7 +35,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -67,6 +66,7 @@ import dev.x3d.dayline.domain.model.LessonType
 import dev.x3d.dayline.domain.model.NamedRef
 import dev.x3d.dayline.domain.time.UntisDate
 import dev.x3d.dayline.domain.time.UntisTime
+import dev.x3d.dayline.ui.components.ScreenTopBar
 import java.time.format.TextStyle
 import java.time.temporal.IsoFields
 import java.util.Locale
@@ -113,26 +113,8 @@ fun TimetableScreen(
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            session?.user ?: stringResource(R.string.nav_timetable),
-                            style = MaterialTheme.typography.titleLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        session?.schoolDisplayName?.let {
-                            Text(
-                                it,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                },
+            ScreenTopBar(
+                title = session?.schoolDisplayName ?: stringResource(R.string.nav_timetable),
                 actions = {
                     if (pager.currentPage != CENTER_PAGE) {
                         FilledTonalIconButton(onClick = { scope.launch { pager.animateScrollToPage(CENTER_PAGE) } }) {
@@ -410,9 +392,9 @@ private fun BlockCell(placed: PlacedBlock, modifier: Modifier, onClick: () -> Un
                 )
                 Column(
                     Modifier
-                        .padding(horizontal = 5.dp, vertical = 5.dp)
+                        .padding(horizontal = 5.dp, vertical = 4.dp)
                         .alpha(if (cancelled) 0.8f else 1f),
-                    verticalArrangement = Arrangement.spacedBy(1.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     Text(
                         lesson.subjectShort,
@@ -458,7 +440,7 @@ private fun RefText(ref: NamedRef?) {
             overflow = TextOverflow.Clip,
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp))
-                .padding(horizontal = 4.dp),
+                .padding(horizontal = 4.dp, vertical = 0.dp),
         )
     } else {
         Text(ref.shortName, style = style, maxLines = 1, overflow = TextOverflow.Clip)

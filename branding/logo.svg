@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512">
+  <!-- Material-Untis logo. 108×108 adaptive-icon canvas; artwork stays inside the 66dp safe circle. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14524B"/>
+      <stop offset="1" stop-color="#0B2522"/>
+    </linearGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#bg)"/>
+  <g>
+    <!-- Mon: two single periods -->
+    <rect x="31" y="31" width="13" height="20" rx="5" fill="#CFEDE8" fill-opacity="0.9"/>
+    <rect x="31" y="55" width="13" height="22" rx="5" fill="#CFEDE8" fill-opacity="0.9"/>
+    <!-- Tue: today's double period -->
+    <rect x="47.5" y="31" width="13" height="46" rx="6.5" fill="#7CDBD0"/>
+    <!-- Wed: short + long -->
+    <rect x="64" y="31" width="13" height="12" rx="5" fill="#CFEDE8" fill-opacity="0.9"/>
+    <rect x="64" y="47" width="13" height="30" rx="5" fill="#CFEDE8" fill-opacity="0.9"/>
+    <!-- "now" line -->
+    <line x1="30" y1="53" x2="78" y2="53" stroke="#FF8A73" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="29" cy="53" r="4.2" fill="#FF8A73"/>
+  </g>
+</svg>
