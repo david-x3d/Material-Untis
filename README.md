@@ -13,6 +13,8 @@ Not affiliated with Untis. Use your own account only. Do not share credentials.
   <img src="docs/screenshots/phone-settings.png" width="200" alt="Settings">
 </p>
 <p>
+  <img src="docs/screenshots/phone-onboarding-1.png" width="200" alt="Onboarding">
+  <img src="docs/screenshots/phone-onboarding-3.png" width="200" alt="Sign in">
   <img src="docs/screenshots/watch.png" width="200" alt="Wear OS">
 </p>
 
@@ -24,7 +26,9 @@ Sample data only (invented school and timetable). Rendered from the real Compose
 - Find a school (search or enter server + school name)
 - Sign in with password or app secret / QR (TOTP)
 - Week grid like Untis: double periods joined, substitutions highlighted, cancelled lessons, now line, swipe between weeks
-- Absences of the current school year (excused / unexcused / open)
+- Absences of the current school year (excused / unexcused / open) and reporting an absence ("Krankmeldung")
+- Student and parent accounts (parents see their child)
+- Subject colours: automatic (shuffle) or your own per subject; own colour scheme, wallpaper colours optional
 - Lesson details (subject, teacher, room, info, subst text, times)
 - Local Room cache, offline banner
 - Sync to the watch (today’s periods only)

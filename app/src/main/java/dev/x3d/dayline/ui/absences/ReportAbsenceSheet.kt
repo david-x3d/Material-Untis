@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -141,6 +142,7 @@ fun ReportAbsenceSheet(
                 (form.endDate > form.startDate || form.endDate == form.startDate && form.endTime > form.startTime)
             Button(
                 onClick = { confirm = true },
+                shapes = ButtonDefaults.shapes(),
                 enabled = valid && !form.sending,
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -234,10 +236,15 @@ private fun ReasonField(form: ReportForm, reasons: List<AbsenceReason>, onChange
                 .fillMaxWidth()
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable),
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = MaterialTheme.shapes.large,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ) {
             reasons.forEach { reason ->
                 DropdownMenuItem(
-                    text = { Text(reason.name) },
+                    text = { Text(reason.name, color = MaterialTheme.colorScheme.onSecondaryContainer) },
                     onClick = {
                         onChange { it.copy(reasonId = reason.id) }
                         expanded = false
@@ -250,7 +257,7 @@ private fun ReasonField(form: ReportForm, reasons: List<AbsenceReason>, onChange
 
 @Composable
 private fun DateButton(label: String, date: UntisDate, modifier: Modifier, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = modifier) {
+    OutlinedButton(onClick = onClick, shapes = ButtonDefaults.shapes(), modifier = modifier) {
         Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
         Column {
             Text(label, style = MaterialTheme.typography.labelSmall)
@@ -261,7 +268,7 @@ private fun DateButton(label: String, date: UntisDate, modifier: Modifier, onCli
 
 @Composable
 private fun TimeButton(label: String, time: UntisTime, modifier: Modifier, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = modifier) {
+    OutlinedButton(onClick = onClick, shapes = ButtonDefaults.shapes(), modifier = modifier) {
         Icon(Icons.Outlined.Schedule, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
         Column {
             Text(label, style = MaterialTheme.typography.labelSmall)

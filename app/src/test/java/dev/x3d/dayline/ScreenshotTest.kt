@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
+import dev.x3d.dayline.data.prefs.UserPrefs
 import dev.x3d.dayline.data.repo.FakePeriodRepository
 import dev.x3d.dayline.domain.PeriodRepository
 import dev.x3d.dayline.domain.model.Lesson
@@ -24,6 +25,11 @@ import dev.x3d.dayline.sync.SyncScheduler
 import dev.x3d.dayline.ui.absences.AbsencesScreen
 import dev.x3d.dayline.ui.absences.AbsencesViewModel
 import dev.x3d.dayline.ui.lesson.LessonScreen
+import dev.x3d.dayline.ui.login.LoginScreen
+import dev.x3d.dayline.ui.login.LoginViewModel
+import dev.x3d.dayline.ui.login.QrDraftStore
+import dev.x3d.dayline.ui.onboarding.AccountTypeScreen
+import dev.x3d.dayline.ui.onboarding.OnboardingDraft
 import dev.x3d.dayline.ui.lesson.LessonViewModel
 import dev.x3d.dayline.ui.settings.SettingsScreen
 import dev.x3d.dayline.ui.settings.SettingsViewModel
@@ -126,7 +132,16 @@ class ScreenshotTest {
     @Test fun absences() = shot("absences") { AbsencesScreen(viewModel = AbsencesViewModel(repo)) }
 
     @Test fun settings() = shot("settings") {
-        SettingsScreen(onLoggedOut = {}, viewModel = SettingsViewModel(repo, SyncScheduler(ApplicationProvider.getApplicationContext())))
+        SettingsScreen(onLoggedOut = {}, viewModel = SettingsViewModel(repo, SyncScheduler(ApplicationProvider.getApplicationContext()), UserPrefs(ApplicationProvider.getApplicationContext())))
+    }
+
+    @Test fun welcome() = shot("onboarding-1") { AccountTypeScreen(onContinue = {}, draft = OnboardingDraft()) }
+
+    @Test fun login() = shot("onboarding-3") {
+        LoginScreen(
+            onLoggedIn = {}, onScanQr = {}, onChangeSchool = {},
+            viewModel = LoginViewModel(repo, SyncScheduler(ApplicationProvider.getApplicationContext()), QrDraftStore(), OnboardingDraft()),
+        )
     }
 
     private companion object {

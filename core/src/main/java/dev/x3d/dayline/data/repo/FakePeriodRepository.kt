@@ -119,6 +119,9 @@ class FakePeriodRepository(
 
     override fun lesson(id: Long): Flow<Lesson?> = lessons.map { list -> list.find { it.id == id } }
 
+    override fun subjects(): Flow<List<NamedRef>> =
+        lessons.map { list -> list.mapNotNull { it.subject }.distinctBy { it.shortName }.sortedBy { it.shortName } }
+
     override fun timegrid(): Flow<List<TimegridDay>> = flowOf(
         listOf(
             TimegridDay(

@@ -84,6 +84,9 @@ fun SettingsScreen(
                 ),
             )
 
+            SectionLabel(stringResource(R.string.settings_appearance))
+            AppearanceGroup(state, viewModel)
+
             SectionLabel(stringResource(R.string.settings_sync))
             SegmentedGroup(
                 listOf(
@@ -126,7 +129,7 @@ fun SettingsScreen(
                                 ?: stringResource(R.string.settings_never_synced),
                             state.sync.lastError,
                         ) {
-                            FilledTonalButton(onClick = viewModel::syncNow, enabled = !state.sync.isSyncing) {
+                            FilledTonalButton(onClick = viewModel::syncNow, shapes = ButtonDefaults.shapes(), enabled = !state.sync.isSyncing) {
                                 Text(stringResource(R.string.settings_sync_now))
                             }
                         }
@@ -154,6 +157,7 @@ fun SettingsScreen(
             Spacer(Modifier.padding(4.dp))
             FilledTonalButton(
                 onClick = { confirmLogout = true },
+                shapes = ButtonDefaults.shapes(),
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,

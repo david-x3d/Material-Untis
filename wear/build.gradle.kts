@@ -12,8 +12,8 @@ android {
         applicationId = "dev.x3d.dayline"
         minSdk = 30
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.2.0"
+        versionCode = 4
+        versionName = "0.3.0"
     }
 
     // Release signing comes from the environment (CI secrets). Without it, release builds are

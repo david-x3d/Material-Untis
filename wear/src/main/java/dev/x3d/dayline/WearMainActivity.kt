@@ -55,6 +55,7 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import dev.x3d.dayline.data.PhoneSync
 import dev.x3d.dayline.data.WearTimetableStore
 import dev.x3d.dayline.domain.model.WatchPayload
+import dev.x3d.dayline.domain.model.SubjectPalette
 import dev.x3d.dayline.domain.model.WatchPeriod
 import dev.x3d.dayline.domain.time.UntisDate
 import dev.x3d.dayline.domain.time.UntisTime
@@ -62,7 +63,6 @@ import dev.x3d.dayline.domain.time.minutesUntil
 import java.text.DateFormat
 import java.time.format.DateTimeFormatter
 import java.util.Date
-import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -301,7 +301,7 @@ private fun BlockCard(block: WatchBlock, past: Boolean, modifier: Modifier, tran
                 Modifier
                     .width(4.dp)
                     .fillMaxHeight()
-                    .background(if (block.irregular) colors.primary else subjectColor(block.first.subject), CircleShape),
+                    .background(if (block.irregular) colors.primary else subjectColor(block.first), CircleShape),
             )
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
@@ -328,9 +328,6 @@ private fun BlockCard(block: WatchBlock, past: Boolean, modifier: Modifier, tran
     }
 }
 
-/** Same hue per subject as on the phone. */
-private fun subjectColor(subject: String): Color {
-    if (subject.isEmpty()) return Color.Gray
-    val hue = (abs(subject.hashCode()) % 360).toFloat()
-    return Color.hsl(hue, saturation = 0.55f, lightness = 0.72f)
-}
+/** The colour picked on the phone; older payloads without one get the default auto colour. */
+private fun subjectColor(period: WatchPeriod): Color =
+    Color(if (period.color != 0) period.color else SubjectPalette.auto(period.subject, seed = 0, dark = true))

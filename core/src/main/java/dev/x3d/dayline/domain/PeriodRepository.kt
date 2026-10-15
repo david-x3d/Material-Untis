@@ -4,6 +4,7 @@ import dev.x3d.dayline.domain.model.AbsenceReport
 import dev.x3d.dayline.domain.model.AbsenceReportOptions
 import dev.x3d.dayline.domain.model.AccountType
 import dev.x3d.dayline.domain.model.Lesson
+import dev.x3d.dayline.domain.model.NamedRef
 import dev.x3d.dayline.domain.model.School
 import dev.x3d.dayline.domain.model.SyncState
 import dev.x3d.dayline.domain.model.TimegridDay
@@ -51,6 +52,9 @@ interface PeriodRepository {
     fun lessonsInRange(start: UntisDate, end: UntisDate): Flow<List<Lesson>>
     fun lesson(id: Long): Flow<Lesson?>
     fun timegrid(): Flow<List<TimegridDay>>
+
+    /** Subjects in the cached timetable (short + long name), for the colour settings. */
+    fun subjects(): Flow<List<NamedRef>>
     suspend fun setSyncIntervalMinutes(minutes: Int)
     fun syncIntervalMinutes(): Flow<Int>
 }

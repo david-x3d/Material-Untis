@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.x3d.dayline.domain.PeriodException
 import dev.x3d.dayline.domain.PeriodRepository
+import dev.x3d.dayline.domain.model.AccountType
+import dev.x3d.dayline.ui.onboarding.OnboardingDraft
 import dev.x3d.dayline.sync.SyncScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,15 +20,20 @@ data class LoginUiState(
     val loading: Boolean = false,
     val error: Boolean = false,
     val schoolLabel: String = "",
+    val parent: Boolean = false,
 )
 
 class LoginViewModel(
     private val repository: PeriodRepository,
     private val syncScheduler: SyncScheduler,
     private val qrDraftStore: QrDraftStore,
+    private val onboarding: OnboardingDraft,
 ) : ViewModel() {
     private val _state = MutableStateFlow(
-        LoginUiState(schoolLabel = repository.selectedSchool.value?.displayName.orEmpty()),
+        LoginUiState(
+            schoolLabel = repository.selectedSchool.value?.displayName.orEmpty(),
+            parent = onboarding.accountType == AccountType.PARENT,
+        ),
     )
     val state: StateFlow<LoginUiState> = _state
 
@@ -60,9 +67,9 @@ class LoginViewModel(
             _state.update { it.copy(loading = true, error = false) }
             try {
                 if (current.useSecret) {
-                    repository.loginSecret(current.user.trim(), current.secret.trim())
+                    repository.loginSecret(current.user.trim(), current.secret.trim(), onboarding.accountType)
                 } else {
-                    repository.loginPassword(current.user.trim(), current.password)
+                    repository.loginPassword(current.user.trim(), current.password, onboarding.accountType)
                 }
                 syncScheduler.schedulePeriodic(15)
                 syncScheduler.runNow()

@@ -27,6 +27,8 @@ import java.time.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import dev.x3d.dayline.domain.model.Lesson
+import dev.x3d.dayline.domain.model.NamedRef
+import dev.x3d.dayline.domain.model.SubjectColors
 import dev.x3d.dayline.domain.model.School
 import dev.x3d.dayline.domain.model.SyncState
 import dev.x3d.dayline.domain.model.TimegridDay
@@ -337,7 +339,9 @@ class PeriodRepositoryImpl(
     private suspend fun pushWatch(now: Long) {
         val today = UntisDate.today()
         val lessons = lessonDao.listRange(today.yyyymmdd, today.yyyymmdd).map(LessonMapper::toDomain)
-        val payload = LessonMapper.toWatchPayload(today, now, lessons)
+        // The watch is always dark, so it gets the dark-theme variant of each subject colour.
+        val colors = runCatching { prefs.subjectColors.first() }.getOrDefault(SubjectColors())
+        val payload = LessonMapper.toWatchPayload(today, now, lessons) { subject -> colors.argb(subject, dark = true) }
         try {
             watchPusher?.push(payload)
             watchState.value = WatchStatus(connected = true, lastPushedAt = now)
@@ -354,6 +358,9 @@ class PeriodRepositoryImpl(
 
     override fun lesson(id: Long): Flow<Lesson?> =
         lessonDao.observeId(id).map { it?.let(LessonMapper::toDomain) }
+
+    override fun subjects(): Flow<List<NamedRef>> =
+        lessonDao.observeSubjects().map { rows -> rows.map { NamedRef(0, it.subjectShort, it.subjectLong.ifEmpty { it.subjectShort }) } }
 
     override fun timegrid(): Flow<List<TimegridDay>> =
         timegridDao.observeAll().map { entities ->

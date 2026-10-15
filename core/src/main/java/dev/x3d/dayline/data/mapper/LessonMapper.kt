@@ -110,7 +110,12 @@ object LessonMapper {
         },
     )
 
-    fun toWatchPayload(date: UntisDate, syncedAt: Long, lessons: List<Lesson>): WatchPayload =
+    fun toWatchPayload(
+        date: UntisDate,
+        syncedAt: Long,
+        lessons: List<Lesson>,
+        colorOf: (String) -> Int = { 0 },
+    ): WatchPayload =
         WatchPayload(
             date = date.yyyymmdd,
             syncedAt = syncedAt,
@@ -127,6 +132,7 @@ object LessonMapper {
                         LessonStatus.NORMAL -> "normal"
                     },
                     info = listOfNotNull(lesson.substText, lesson.info).joinToString(" · "),
+                    color = colorOf(lesson.subject?.shortName.orEmpty()),
                 )
             },
         )

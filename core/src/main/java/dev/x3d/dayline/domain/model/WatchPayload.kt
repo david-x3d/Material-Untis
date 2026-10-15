@@ -18,4 +18,6 @@ data class WatchPeriod(
     val end: Int,
     val status: String,
     val info: String,
+    /** Subject colour as chosen on the phone (ARGB), 0 = let the watch pick. */
+    val color: Int = 0,
 )

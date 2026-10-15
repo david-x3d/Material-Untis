@@ -97,4 +97,23 @@ This is sent to your school like in WebUntis.</string>
     <string name="report_not_allowed">Your school does not allow reporting absences with this account.</string>
     <string name="report_error_auth">The school rejected the request. Sign in again and retry.</string>
     <string name="report_error">Could not send: %1$s</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_dynamic_color">Wallpaper colours</string>
+    <string name="settings_dynamic_color_hint">Off: Material-Untis colours</string>
+    <string name="settings_subject_colors">Subject colours</string>
+    <string name="settings_colors_auto">Automatic</string>
+    <string name="settings_colors_custom">My own</string>
+    <string name="settings_colors_reroll">Shuffle colours</string>
+    <string name="settings_colors_custom_hint">Tap a subject to choose its colour.</string>
+    <string name="settings_colors_no_subjects">Subjects appear here after the first sync.</string>
+    <string name="settings_colors_use_auto">Use automatic colour</string>
+    <string name="onboarding_step">Step %1$d of %2$d</string>
+    <string name="onboarding_welcome">Hi! 👋</string>
+    <string name="onboarding_welcome_hint">Your Untis timetable in Material You, with absences and your watch.</string>
+    <string name="onboarding_who">Who are you?</string>
+    <string name="onboarding_student_hint">I go to school and sign in myself</string>
+    <string name="onboarding_parent_hint">I sign in with a parent account for my child</string>
+    <string name="school_hint">Search for your school or enter the server yourself.</string>
+    <string name="login_student_hint">Use your own WebUntis login.</string>
+    <string name="login_parent_hint">Use the parent account. Your child is picked automatically.</string>
 </resources>

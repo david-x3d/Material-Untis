@@ -7,6 +7,7 @@ import dev.x3d.dayline.ui.absences.AbsencesViewModel
 import dev.x3d.dayline.ui.lesson.LessonViewModel
 import dev.x3d.dayline.ui.login.LoginViewModel
 import dev.x3d.dayline.ui.login.QrDraftStore
+import dev.x3d.dayline.ui.onboarding.OnboardingDraft
 import dev.x3d.dayline.ui.school.SchoolViewModel
 import dev.x3d.dayline.ui.settings.SettingsViewModel
 import dev.x3d.dayline.ui.timetable.TimetableViewModel
@@ -20,11 +21,12 @@ val appModule = module {
     single<PeriodRepositoryImpl.WatchPusher> { WearableWatchPusher(androidContext()) }
     single { SyncScheduler(androidContext()) }
     single { QrDraftStore() }
+    single { OnboardingDraft() }
     viewModel { SchoolViewModel(get()) }
-    viewModel { LoginViewModel(get(), get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get()) }
     viewModel { TimetableViewModel(get()) }
     viewModel { AbsencesViewModel(get()) }
     viewModel { LessonViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     worker { TimetableSyncWorker(get(), get()) }
 }

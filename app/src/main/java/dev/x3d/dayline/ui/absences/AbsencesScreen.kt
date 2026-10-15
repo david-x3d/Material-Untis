@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Sick
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -261,7 +262,7 @@ private fun ErrorCard(error: Throwable, onRetry: () -> Unit) {
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(message, style = MaterialTheme.typography.bodyLarge)
-            FilledTonalButton(onClick = onRetry) { Text(stringResource(R.string.error_retry)) }
+            FilledTonalButton(onClick = onRetry, shapes = ButtonDefaults.shapes()) { Text(stringResource(R.string.error_retry)) }
         }
     }
 }

@@ -10,8 +10,10 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Sick
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,12 +35,14 @@ import dev.x3d.dayline.ui.absences.AbsencesScreen
 import dev.x3d.dayline.ui.lesson.LessonScreen
 import dev.x3d.dayline.ui.login.LoginScreen
 import dev.x3d.dayline.ui.login.QrScanScreen
+import dev.x3d.dayline.ui.onboarding.AccountTypeScreen
 import dev.x3d.dayline.ui.school.SchoolScreen
 import dev.x3d.dayline.ui.settings.SettingsScreen
 import dev.x3d.dayline.ui.timetable.TimetableScreen
 import org.koin.core.context.GlobalContext
 
 object Routes {
+    const val WELCOME = "welcome"
     const val SCHOOL = "school"
     const val LOGIN = "login"
     const val QR = "qr"
@@ -49,11 +53,12 @@ object Routes {
     fun lesson(id: Long) = "lesson/$id"
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DaylineRoot() {
     val repository = remember { GlobalContext.get().get<PeriodRepository>() }
     val nav = rememberNavController()
-    val start = if (repository.session.value == null) Routes.SCHOOL else Routes.TIMETABLE
+    val start = if (repository.session.value == null) Routes.WELCOME else Routes.TIMETABLE
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     val tabs = listOf(
@@ -66,10 +71,10 @@ fun DaylineRoot() {
     Scaffold(
         bottomBar = {
             if (showBar) {
-                NavigationBar {
+                ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     tabs.forEach { tab ->
                         val selected = route == tab.route
-                        NavigationBarItem(
+                        ShortNavigationBarItem(
                             selected = selected,
                             onClick = { nav.tab(tab.route) },
                             icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
@@ -87,14 +92,17 @@ fun DaylineRoot() {
                 .padding(padding)
                 .consumeWindowInsets(padding),
         ) {
+            composable(Routes.WELCOME) {
+                AccountTypeScreen(onContinue = { nav.navigate(Routes.SCHOOL) })
+            }
             composable(Routes.SCHOOL) {
-                SchoolScreen(onContinue = { nav.navigate(Routes.LOGIN) { popUpTo(Routes.SCHOOL) { inclusive = false } } })
+                SchoolScreen(onContinue = { nav.navigate(Routes.LOGIN) })
             }
             composable(Routes.LOGIN) {
                 LoginScreen(
                     onLoggedIn = {
                         nav.navigate(Routes.TIMETABLE) {
-                            popUpTo(Routes.SCHOOL) { inclusive = true }
+                            popUpTo(Routes.WELCOME) { inclusive = true }
                         }
                     },
                     onScanQr = { nav.navigate(Routes.QR) },
@@ -113,7 +121,7 @@ fun DaylineRoot() {
             composable(Routes.SETTINGS) {
                 SettingsScreen(
                     onLoggedOut = {
-                        nav.navigate(Routes.SCHOOL) {
+                        nav.navigate(Routes.WELCOME) {
                             popUpTo(0) { inclusive = true }
                         }
                     },

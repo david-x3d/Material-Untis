@@ -52,7 +52,7 @@ import dev.x3d.dayline.domain.model.LessonStatus
 import dev.x3d.dayline.domain.model.LessonType
 import dev.x3d.dayline.domain.model.NamedRef
 import dev.x3d.dayline.ui.components.SegmentedGroup
-import dev.x3d.dayline.ui.timetable.subjectColor
+import dev.x3d.dayline.ui.theme.subjectColor
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import org.koin.androidx.compose.koinViewModel

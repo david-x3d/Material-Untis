@@ -49,8 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,10 +65,10 @@ import dev.x3d.dayline.domain.model.NamedRef
 import dev.x3d.dayline.domain.time.UntisDate
 import dev.x3d.dayline.domain.time.UntisTime
 import dev.x3d.dayline.ui.components.ScreenTopBar
+import dev.x3d.dayline.ui.theme.subjectColor
 import java.time.format.TextStyle
 import java.time.temporal.IsoFields
 import java.util.Locale
-import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -445,13 +443,4 @@ private fun RefText(ref: NamedRef?) {
     } else {
         Text(ref.shortName, style = style, maxLines = 1, overflow = TextOverflow.Clip)
     }
-}
-
-/** Stable accent color per subject. */
-@Composable
-fun subjectColor(subject: String): Color {
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    if (subject.isEmpty()) return MaterialTheme.colorScheme.outline
-    val hue = (abs(subject.hashCode()) % 360).toFloat()
-    return Color.hsl(hue, saturation = if (dark) 0.55f else 0.5f, lightness = if (dark) 0.72f else 0.45f)
 }

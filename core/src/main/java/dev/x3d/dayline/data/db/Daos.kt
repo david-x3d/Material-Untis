@@ -20,6 +20,10 @@ interface LessonDao {
     @Query("SELECT * FROM lessons WHERE date BETWEEN :start AND :end")
     suspend fun listRange(start: Int, end: Int): List<LessonEntity>
 
+    /** Every subject seen in the cached timetable, for the colour settings. */
+    @Query("SELECT subjectShort, MAX(subjectLong) AS subjectLong FROM lessons WHERE subjectShort != '' GROUP BY subjectShort ORDER BY subjectShort")
+    fun observeSubjects(): Flow<List<SubjectRow>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(items: List<LessonEntity>)
 
@@ -29,6 +33,8 @@ interface LessonDao {
     @Query("DELETE FROM lessons")
     suspend fun deleteAll()
 }
+
+data class SubjectRow(val subjectShort: String, val subjectLong: String)
 
 @Dao
 interface TimegridDao {

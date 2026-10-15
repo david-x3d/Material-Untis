@@ -96,4 +96,23 @@ Das wird wie in WebUntis an deine Schule gesendet.</string>
     <string name="report_not_allowed">Deine Schule erlaubt mit diesem Konto keine Abwesenheitsmeldung.</string>
     <string name="report_error_auth">Die Schule hat die Anfrage abgelehnt. Bitte neu anmelden und nochmal versuchen.</string>
     <string name="report_error">Senden fehlgeschlagen: %1$s</string>
+    <string name="settings_appearance">Darstellung</string>
+    <string name="settings_dynamic_color">Hintergrundbild-Farben</string>
+    <string name="settings_dynamic_color_hint">Aus: Material-Untis-Farben</string>
+    <string name="settings_subject_colors">Fächerfarben</string>
+    <string name="settings_colors_auto">Automatisch</string>
+    <string name="settings_colors_custom">Eigene</string>
+    <string name="settings_colors_reroll">Neu würfeln</string>
+    <string name="settings_colors_custom_hint">Tippe auf ein Fach, um seine Farbe zu wählen.</string>
+    <string name="settings_colors_no_subjects">Fächer erscheinen hier nach der ersten Synchronisierung.</string>
+    <string name="settings_colors_use_auto">Automatische Farbe verwenden</string>
+    <string name="onboarding_step">Schritt %1$d von %2$d</string>
+    <string name="onboarding_welcome">Hallo! 👋</string>
+    <string name="onboarding_welcome_hint">Dein Untis-Stundenplan in Material You, mit Abwesenheiten und auf der Uhr.</string>
+    <string name="onboarding_who">Wer bist du?</string>
+    <string name="onboarding_student_hint">Ich gehe zur Schule und melde mich selbst an</string>
+    <string name="onboarding_parent_hint">Ich melde mich mit dem Eltern-Konto für mein Kind an</string>
+    <string name="school_hint">Such deine Schule oder gib den Server selbst ein.</string>
+    <string name="login_student_hint">Mit deinem eigenen WebUntis-Login.</string>
+    <string name="login_parent_hint">Mit dem Eltern-Konto. Dein Kind wird automatisch erkannt.</string>
 </resources>

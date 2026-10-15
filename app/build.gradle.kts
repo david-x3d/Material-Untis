@@ -13,8 +13,8 @@ android {
         applicationId = "dev.x3d.dayline"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.2.0"
+        versionCode = 4
+        versionName = "0.3.0"
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -49,6 +49,11 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+        // The whole UI is Material 3 Expressive.
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+        )
     }
 
     buildFeatures {
