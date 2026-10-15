@@ -1,9 +1,18 @@
 name: Release
 
-# Push a tag like v0.2.0 to build phone + Wear APKs and publish a GitHub release.
+# Push a tag like v0.2.0, or run it manually with a version, to build phone + Wear APKs
+# and publish a GitHub release.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag, e.g. v0.2.0"
+        required: true
+
+env:
+  VERSION: ${{ inputs.version || github.ref_name }}
 
 permissions:
   contents: write
@@ -45,11 +54,14 @@ jobs:
       - name: Collect APKs
         run: |
           mkdir dist
-          cp app/build/outputs/apk/release/app-release.apk "dist/Material-Untis-phone-${GITHUB_REF_NAME}.apk"
-          cp wear/build/outputs/apk/release/wear-release.apk "dist/Material-Untis-wear-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "dist/Material-Untis-phone-${VERSION}.apk"
+          cp wear/build/outputs/apk/release/wear-release.apk "dist/Material-Untis-wear-${VERSION}.apk"
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: Material-Untis ${{ env.VERSION }}
           files: dist/*.apk
           generate_release_notes: true
           body: |
