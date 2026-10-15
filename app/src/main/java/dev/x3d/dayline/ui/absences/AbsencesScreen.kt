@@ -22,14 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -38,15 +35,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -69,32 +69,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun AbsencesScreen(viewModel: AbsencesViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var filterOpen by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
         ScreenTopBar(
             title = stringResource(R.string.absences_title),
             subtitle = state.report?.schoolYear?.let { year -> "${formatDate(year.start)} – ${formatDate(year.end)}" },
-            actions = {
-                Box {
-                    IconButton(onClick = { filterOpen = true }) {
-                        Icon(Icons.Outlined.FilterList, contentDescription = stringResource(R.string.absences_filter))
-                    }
-                    DropdownMenu(expanded = filterOpen, onDismissRequest = { filterOpen = false }) {
-                        AbsenceFilter.entries.forEach { filter ->
-                            DropdownMenuItem(
-                                text = { Text(stringResource(filter.label())) },
-                                onClick = {
-                                    viewModel.setFilter(filter)
-                                    filterOpen = false
-                                },
-                                trailingIcon = {
-                                    if (state.filter == filter) Icon(Icons.Outlined.CheckCircle, contentDescription = null)
-                                },
-                            )
-                        }
-                    }
-                }
-            },
         )
         val pullState = rememberPullToRefreshState()
         val refreshing = state.loading && state.report != null
@@ -127,7 +105,7 @@ fun AbsencesScreen(viewModel: AbsencesViewModel = koinViewModel()) {
                     }
                 }
                 if (state.report != null) {
-                    item { Summary(state.all) }
+                    item { FilterBar(state, viewModel::setFilter) }
                     if (state.visible.isEmpty()) {
                         item {
                             Text(
@@ -150,47 +128,38 @@ fun AbsencesScreen(viewModel: AbsencesViewModel = koinViewModel()) {
 private fun AbsenceFilter.label(): Int = when (this) {
     AbsenceFilter.ALL -> R.string.absences_filter_all
     AbsenceFilter.EXCUSED -> R.string.absence_excused
-    AbsenceFilter.UNEXCUSED -> R.string.absence_unexcused
     AbsenceFilter.OPEN -> R.string.absence_open
 }
 
+/** Connected button group: filter and count in one (replaces the stat tiles). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Summary(all: List<Absence>) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        StatTile(
-            stringResource(R.string.absences_total),
-            all.size,
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer,
-            Modifier.weight(1f),
-        )
-        StatTile(
-            stringResource(R.string.absence_excused),
-            all.count { it.status == AbsenceStatus.EXCUSED },
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            Modifier.weight(1f),
-        )
-        StatTile(
-            stringResource(R.string.absences_not_excused),
-            all.count { it.status != AbsenceStatus.EXCUSED },
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-            Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun StatTile(label: String, value: Int, container: Color, content: Color, modifier: Modifier) {
-    Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = container, contentColor = content),
+private fun FilterBar(state: AbsencesUiState, onFilter: (AbsenceFilter) -> Unit) {
+    val options = AbsenceFilter.entries
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            Text(value.toString(), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
-            Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        options.forEachIndexed { index, filter ->
+            ToggleButton(
+                checked = state.filter == filter,
+                onCheckedChange = { onFilter(filter) },
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { role = Role.RadioButton },
+                shapes = when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
+                contentPadding = PaddingValues(horizontal = 6.dp),
+            ) {
+                Text(
+                    "${stringResource(filter.label())} ${state.count(filter)}",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

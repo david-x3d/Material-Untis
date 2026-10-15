@@ -29,10 +29,10 @@ class FakePeriodRepository(
     initialLessons: List<Lesson> = sampleLessons(),
 ) : PeriodRepository {
     private val school = MutableStateFlow<School?>(
-        School("Example Gymnasium", "example", "ajax.webuntis.com", "Example Street 1"),
+        School("Gymnasium Musterstadt", "musterstadt", "example.webuntis.com", "Musterweg 1"),
     )
     private val sessionState = MutableStateFlow<UserSession?>(
-        UserSession("ajax.webuntis.com", "example", "Example Gymnasium", "student", 5, 1001, 12),
+        UserSession("example.webuntis.com", "musterstadt", "Gymnasium Musterstadt", "max.muster", 5, 1001, 12),
     )
     private val sync = MutableStateFlow(SyncState(lastSuccessAt = System.currentTimeMillis()))
     private val watch = MutableStateFlow(WatchStatus(connected = false))
@@ -84,8 +84,9 @@ class FakePeriodRepository(
         absenceReport.value = AbsenceReport(
             schoolYear = SchoolYear("2026/2027", UntisDate(20260831), UntisDate(20270718)),
             absences = listOf(
-                Absence(2, UntisDate(20260303), UntisDate(20260303), UntisTime(750), UntisTime(1305), "Krankheit", null, AbsenceStatus.EXCUSED, "entschuldigt"),
-                Absence(1, UntisDate(20260302), UntisDate(20260302), UntisTime(750), UntisTime(1305), "Krankheit", null, AbsenceStatus.EXCUSED, "entschuldigt"),
+                Absence(3, UntisDate(20261009), UntisDate(20261009), UntisTime(950), UntisTime(1125), "Arzttermin", null, AbsenceStatus.OPEN, null),
+                Absence(2, UntisDate(20260922), UntisDate(20260923), UntisTime(800), UntisTime(1320), "Krankheit", "Fieber", AbsenceStatus.EXCUSED, "entschuldigt"),
+                Absence(1, UntisDate(20260904), UntisDate(20260904), UntisTime(800), UntisTime(930), "Verspätung", null, AbsenceStatus.UNEXCUSED, "nicht entschuldigt"),
             ),
             fetchedAt = System.currentTimeMillis(),
         )

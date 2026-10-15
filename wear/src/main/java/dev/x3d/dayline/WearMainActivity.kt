@@ -64,6 +64,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import kotlin.math.abs
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -77,7 +78,7 @@ class WearMainActivity : ComponentActivity() {
             val colors = remember { dynamicColorScheme(context) }
             MaterialTheme(colorScheme = colors ?: MaterialTheme.colorScheme) {
                 AppScaffold {
-                    TodayScreen(store)
+                    TodayScreen(store.payload)
                 }
             }
         }
@@ -122,10 +123,10 @@ private fun dayState(payload: WatchPayload?, today: UntisDate, now: UntisTime): 
 }
 
 @Composable
-private fun TodayScreen(store: WearTimetableStore) {
+internal fun TodayScreen(payloadFlow: Flow<WatchPayload?>) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val payload by store.payload.collectAsStateWithLifecycle(initialValue = null)
+    val payload by payloadFlow.collectAsStateWithLifecycle(initialValue = null)
     // One clock tick per 30 s; everything else is derived and remembered, so scrolling stays cheap.
     val clock by produceState(UntisDate.today() to UntisTime.now()) {
         while (true) {
@@ -257,24 +258,26 @@ private fun HeroCard(block: WatchBlock, now: UntisTime, modifier: Modifier, tran
         transformation = transformation,
     ) {
         Text(
-            stringResource(if (toStart > 0) R.string.wear_next else R.string.wear_now),
-            style = MaterialTheme.typography.labelSmall,
+            stringResource(if (toStart > 0) R.string.wear_next else R.string.wear_now) + " · " + label,
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
         )
         Text(
             block.first.subject,
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            listOf(block.first.room, block.first.teacher).filter { it.isNotBlank() && it != "—" }.joinToString(" · "),
-            style = MaterialTheme.typography.titleMedium,
+            listOf(block.first.room, block.first.teacher).filter { it.isNotBlank() && it != "—" }.joinToString(" · ") +
+                "  " + start.format() + "–" + end.format(),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-        Spacer(Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium)
         if (block.first.info.isNotBlank()) {
-            Text(block.first.info, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(block.first.info, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

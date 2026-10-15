@@ -43,10 +43,7 @@
     <string name="status_irregular">Vertretung</string>
     <string name="status_exam">Prüfung</string>
     <string name="absences_title">Abwesenheiten</string>
-    <string name="absences_filter">Filter</string>
     <string name="absences_filter_all">Alle</string>
-    <string name="absences_total">Gesamt</string>
-    <string name="absences_not_excused">Offen</string>
     <string name="absence_excused">Entschuldigt</string>
     <string name="absence_unexcused">Nicht entschuldigt</string>
     <string name="absence_open">Offen</string>

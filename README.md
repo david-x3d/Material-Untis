@@ -4,15 +4,31 @@ Personal timetable for one student account. Phone app plus Wear OS companion.
 
 Not affiliated with Untis. Use your own account only. Do not share credentials.
 
+## Screenshots
+
+<p>
+  <img src="docs/screenshots/phone-timetable.png" width="200" alt="Timetable">
+  <img src="docs/screenshots/phone-lesson.png" width="200" alt="Lesson details">
+  <img src="docs/screenshots/phone-absences.png" width="200" alt="Absences">
+  <img src="docs/screenshots/phone-settings.png" width="200" alt="Settings">
+</p>
+<p>
+  <img src="docs/screenshots/watch.png" width="200" alt="Wear OS">
+</p>
+
+Sample data only (invented school and timetable). Rendered from the real Compose screens with Robolectric:
+`gradlew.bat :app:testDebugUnitTest :wear:testDebugUnitTest -Pscreenshots`.
+
 ## What it does
 
 - Find a school (search or enter server + school name)
 - Sign in with password or app secret / QR (TOTP)
-- Today timeline and week view, with cancelled and substitution lessons
+- Week grid like Untis: double periods joined, substitutions highlighted, cancelled lessons, now line, swipe between weeks
+- Absences of the current school year (excused / unexcused / open)
 - Lesson details (subject, teacher, room, info, subst text, times)
 - Local Room cache, offline banner
 - Sync to the watch (today’s periods only)
-- Wear list + next-lesson complication
+- Wear OS (Material 3 Expressive): now/next card with countdown, today's lessons, sync button, next-lesson complication
 - Settings: account, 15/30/60 min sync, logout, watch status
 
 Phone is the source of truth. The watch never signs in to WebUntis.

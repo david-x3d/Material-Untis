@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class AbsenceFilter { ALL, EXCUSED, UNEXCUSED, OPEN }
+/** OPEN = everything not excused yet (unexcused or still pending). */
+enum class AbsenceFilter { ALL, EXCUSED, OPEN }
 
 data class AbsencesUiState(
     val report: AbsenceReport? = null,
@@ -23,12 +24,17 @@ data class AbsencesUiState(
     val error: Throwable? = null,
 ) {
     val all: List<Absence> get() = report?.absences.orEmpty()
+    fun count(filter: AbsenceFilter): Int = when (filter) {
+        AbsenceFilter.ALL -> all.size
+        AbsenceFilter.EXCUSED -> all.count { it.status == AbsenceStatus.EXCUSED }
+        AbsenceFilter.OPEN -> all.count { it.status != AbsenceStatus.EXCUSED }
+    }
+
     val visible: List<Absence>
         get() = when (filter) {
             AbsenceFilter.ALL -> all
             AbsenceFilter.EXCUSED -> all.filter { it.status == AbsenceStatus.EXCUSED }
-            AbsenceFilter.UNEXCUSED -> all.filter { it.status == AbsenceStatus.UNEXCUSED }
-            AbsenceFilter.OPEN -> all.filter { it.status == AbsenceStatus.OPEN }
+            AbsenceFilter.OPEN -> all.filter { it.status != AbsenceStatus.EXCUSED }
         }
 }
 

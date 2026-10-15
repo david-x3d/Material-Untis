@@ -44,10 +44,7 @@
     <string name="status_irregular">Substitution</string>
     <string name="status_exam">Exam</string>
     <string name="absences_title">Absences</string>
-    <string name="absences_filter">Filter</string>
     <string name="absences_filter_all">All</string>
-    <string name="absences_total">Total</string>
-    <string name="absences_not_excused">Not excused</string>
     <string name="absence_excused">Excused</string>
     <string name="absence_unexcused">Unexcused</string>
     <string name="absence_open">Open</string>
