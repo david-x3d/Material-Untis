@@ -15,11 +15,15 @@ object QrLoginParser {
         if (!value.startsWith("untis://", ignoreCase = true)) return null
         val query = value.substringAfter('?', missingDelimiterValue = "")
         if (query.isEmpty()) return null
-        val params = query.split('&').mapNotNull { part ->
-            val key = part.substringBefore('=')
-            val v = part.substringAfter('=', missingDelimiterValue = "")
-            if (key.isEmpty()) null else key to urlDecode(v)
-        }.toMap()
+        val params = try {
+            query.split('&').mapNotNull { part ->
+                val key = part.substringBefore('=')
+                val v = part.substringAfter('=', missingDelimiterValue = "")
+                if (key.isEmpty()) null else key to urlDecode(v)
+            }.toMap()
+        } catch (_: IllegalArgumentException) {
+            return null
+        }
         val url = params["url"].orEmpty()
         val schoolName = params["school"].orEmpty()
         val user = params["user"].orEmpty()

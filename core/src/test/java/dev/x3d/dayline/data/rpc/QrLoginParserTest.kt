@@ -17,6 +17,15 @@ class QrLoginParserTest {
     }
 
     @Test
+    fun rejectsMalformedPercentEscapes() {
+        for (key in listOf("%", "%0", "%GG")) {
+            assertNull(QrLoginParser.parse(
+                "untis://setschool?url=https://ajax.webuntis.com&school=example&user=student&key=$key",
+            ))
+        }
+    }
+
+    @Test
     fun rejectsUnknown() {
         assertNull(QrLoginParser.parse("https://example.com"))
     }

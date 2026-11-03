@@ -233,13 +233,11 @@ class PeriodRepositoryImpl(
             endDate = end.yyyymmdd,
         )
         val lessons = periods.map(LessonMapper::toDomain)
-        lessonDao.deleteRange(start.yyyymmdd, end.yyyymmdd)
-        lessonDao.upsertAll(lessons.map(LessonMapper::toEntity))
+        lessonDao.replaceRange(start.yyyymmdd, end.yyyymmdd, lessons.map(LessonMapper::toEntity))
         runCatching {
             val grid = client.getTimegridUnits().map(LessonMapper::toTimegrid)
             if (grid.isEmpty()) return@runCatching
-            timegridDao.deleteAll()
-            timegridDao.insertAll(
+            timegridDao.replaceAll(
                 grid.flatMap { day ->
                     day.units.map { unit ->
                         TimegridEntity(

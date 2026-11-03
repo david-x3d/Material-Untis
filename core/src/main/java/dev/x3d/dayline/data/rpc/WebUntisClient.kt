@@ -240,7 +240,14 @@ class WebUntisClient(
             ?: text.take(200)
 
     suspend fun call(method: String, params: JsonElement, retryAuth: Boolean = true): JsonElement {
-        val response = execute(method, params)
+        val response = try {
+            execute(method, params)
+        } catch (e: PeriodException.SessionExpired) {
+            val reauth = reauthenticator
+            if (!retryAuth || reauth == null) throw e
+            reauth.reauthenticate()
+            return call(method, params, retryAuth = false)
+        }
         if (response.error != null && isAuthError(response.error) && retryAuth) {
             val reauth = reauthenticator
             if (reauth != null) {

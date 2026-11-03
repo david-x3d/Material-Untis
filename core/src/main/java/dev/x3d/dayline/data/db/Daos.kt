@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -27,6 +28,12 @@ interface LessonDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(items: List<LessonEntity>)
 
+    @Transaction
+    suspend fun replaceRange(start: Int, end: Int, items: List<LessonEntity>) {
+        deleteRange(start, end)
+        upsertAll(items)
+    }
+
     @Query("DELETE FROM lessons WHERE date BETWEEN :start AND :end")
     suspend fun deleteRange(start: Int, end: Int)
 
@@ -43,6 +50,12 @@ interface TimegridDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(items: List<TimegridEntity>)
+
+    @Transaction
+    suspend fun replaceAll(items: List<TimegridEntity>) {
+        deleteAll()
+        insertAll(items)
+    }
 
     @Query("DELETE FROM timegrid_units")
     suspend fun deleteAll()

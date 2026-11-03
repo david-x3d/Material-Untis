@@ -21,15 +21,17 @@ class SessionCookieJar : CookieJar {
     var school: String? = null
 
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
-        val name = school ?: return cookies
-        if (!url.encodedPath.startsWith("/WebUntis/")) return cookies
+        val now = System.currentTimeMillis()
+        val matching = cookies.filter { it.expiresAt > now && it.matches(url) }
+        val name = school ?: return matching
+        if (matching.isEmpty() || !url.encodedPath.startsWith("/WebUntis/")) return matching
         val schoolCookie = Cookie.Builder()
             .name("schoolname")
             .value(schoolCookieValue(name))
             .domain(url.host)
             .path("/")
             .build()
-        return cookies + schoolCookie
+        return matching + schoolCookie
     }
 
     fun setSessionId(sessionId: String, host: String) {
@@ -38,7 +40,7 @@ class SessionCookieJar : CookieJar {
             Cookie.Builder()
                 .name("JSESSIONID")
                 .value(sessionId)
-                .domain(domain)
+                .hostOnlyDomain(domain)
                 .path("/")
                 .httpOnly()
                 .secure()

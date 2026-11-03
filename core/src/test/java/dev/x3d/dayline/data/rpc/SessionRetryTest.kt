@@ -16,6 +16,49 @@ class SessionRetryTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
+    fun retriesOnceAfterHttp401() = checkHttp401Retry(repeated = false, retryAuth = true)
+
+    @Test
+    fun doesNotLoopOnRepeatedHttp401() = checkHttp401Retry(repeated = true, retryAuth = true)
+
+    @Test
+    fun doesNotRetryHttp401DuringAuthentication() = checkHttp401Retry(repeated = true, retryAuth = false)
+
+    private fun checkHttp401Retry(repeated: Boolean, retryAuth: Boolean) = runBlocking {
+        val server = MockWebServer()
+        try {
+            server.enqueue(MockResponse().setResponseCode(401))
+            server.enqueue(
+                if (repeated) MockResponse().setResponseCode(401)
+                else MockResponse().setBody("""{"jsonrpc":"2.0","id":"2","result":42}"""),
+            )
+            server.start()
+            val reauthCount = AtomicInteger(0)
+            val cookieJar = SessionCookieJar()
+            val client = WebUntisClient(
+                http = OkHttpClient.Builder().cookieJar(cookieJar).build(),
+                json = json,
+                cookieJar = cookieJar,
+                rpcUrlOverride = server.url("/WebUntis/jsonrpc.do?school=example"),
+            )
+            client.connection = WebUntisClient.Connection("127.0.0.1", "example")
+            client.reauthenticator = WebUntisClient.Reauthenticator { reauthCount.incrementAndGet() }
+
+            try {
+                val result = client.call("getLatestImportTime", JsonObject(emptyMap()), retryAuth)
+                assertTrue(!repeated && retryAuth)
+                assertEquals("42", result.toString())
+            } catch (e: PeriodException.SessionExpired) {
+                assertTrue(repeated || !retryAuth)
+            }
+            assertEquals(if (retryAuth) 1 else 0, reauthCount.get())
+            assertEquals(if (retryAuth) 2 else 1, server.requestCount)
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    @Test
     fun retriesOnceAfterAuthError() = runBlocking {
         val server = MockWebServer()
         server.enqueue(
