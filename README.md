@@ -1,70 +1,117 @@
+<div align="center">
+
+<img src="branding/logo.svg" width="88" alt="">
+
 # Material-Untis
 
-Personal timetable for one student account. Phone app plus Wear OS companion.
+**Your Untis timetable in Material 3 Expressive – on your phone and on your wrist.**
 
-Not affiliated with Untis. Use your own account only. Do not share credentials.
+[![Release](https://img.shields.io/github/v/release/david-x3d/Material-Untis?label=Release&color=14524B)](https://github.com/david-x3d/Material-Untis/releases/latest)
+[![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](#installation)
+[![Wear OS](https://img.shields.io/badge/Wear%20OS-3%2B-4285F4?logo=wearos&logoColor=white)](#installation)
+[![Kotlin](https://img.shields.io/badge/Kotlin-Compose-7F52FF?logo=kotlin&logoColor=white)](#development)
 
-## Screenshots
+<img src="docs/screenshots/phone-timetable.png" width="220" alt="Week timetable">
+<img src="docs/screenshots/phone-lesson.png" width="220" alt="Lesson details">
+<img src="docs/screenshots/watch.png" width="220" alt="Wear OS now/next card">
+
+</div>
+
+A personal timetable for one WebUntis account. The phone app signs in, keeps a local cache and sends today's lessons to the watch. The watch never talks to WebUntis itself.
+
+## What you get
+
+| | |
+|---|---|
+| **Week grid** | Like Untis: double periods joined, substitutions highlighted, cancelled lessons, a "now" line, swipe between weeks |
+| **Holidays & locked weeks** | School holidays and weeks your school has restricted are shown as such, not as empty days |
+| **Lesson details** | Subject, teacher, room, class, info, substitution text and times |
+| **Absences** | Current school year, filtered by excused / unexcused / open – and **Report sick** straight to the school |
+| **Accounts** | Students and parents (parents see their child automatically) |
+| **Sign-in** | Password, or the app secret from your Untis QR code (TOTP) – scan it or paste it |
+| **Colours** | Automatic subject colours (shuffle) or pick your own per subject; Material-Untis theme or wallpaper colours |
+| **Offline** | Room cache with an offline banner – the last timetable is always there |
+| **Background sync** | Every 15, 30 or 60 minutes; today's lessons go to the watch after every sync |
+| **Wear OS** | Now/next card with countdown, today's lessons, sync button and a next-lesson complication |
+| **Demo mode** | Try everything with sample data, no account needed |
+
+<details>
+<summary><b>More screenshots</b></summary>
 
 <p>
-  <img src="docs/screenshots/phone-timetable.png" width="200" alt="Timetable">
-  <img src="docs/screenshots/phone-lesson.png" width="200" alt="Lesson details">
   <img src="docs/screenshots/phone-absences.png" width="200" alt="Absences">
   <img src="docs/screenshots/phone-settings.png" width="200" alt="Settings">
-</p>
-<p>
   <img src="docs/screenshots/phone-onboarding-1.png" width="200" alt="Onboarding">
   <img src="docs/screenshots/phone-onboarding-3.png" width="200" alt="Sign in">
-  <img src="docs/screenshots/watch.png" width="200" alt="Wear OS">
 </p>
 
-Sample data only (invented school and timetable). Rendered from the real Compose screens with Robolectric:
-`gradlew.bat :app:testDebugUnitTest :wear:testDebugUnitTest -Pscreenshots`.
+Sample data only (invented school and timetable). Rendered from the real Compose screens with Robolectric – see [Screenshots](#screenshots).
 
-## What it does
+</details>
 
-- Find a school (search or enter server + school name)
-- Sign in with password or app secret / QR (TOTP)
-- Week grid like Untis: double periods joined, substitutions highlighted, cancelled lessons, now line, swipe between weeks
-- Absences of the current school year (excused / unexcused / open) and reporting an absence ("Krankmeldung")
-- Student and parent accounts (parents see their child)
-- Subject colours: automatic (shuffle) or your own per subject; own colour scheme, wallpaper colours optional
-- Lesson details (subject, teacher, room, info, subst text, times)
-- Local Room cache, offline banner
-- Sync to the watch (today’s periods only)
-- Wear OS (Material 3 Expressive): now/next card with countdown, today's lessons, sync button, next-lesson complication
-- Settings: account, 15/30/60 min sync, logout, watch status
+## Installation
 
-Phone is the source of truth. The watch never signs in to WebUntis.
+Both APKs are attached to the [latest release](https://github.com/david-x3d/Material-Untis/releases/latest).
 
-## Modules
+### Phone
 
-| Module | Role |
-| --- | --- |
-| `:core` | JSON-RPC client, domain, Room, encrypted credentials, WatchPayload |
-| `:app` | Phone UI (Compose, Material 3), WorkManager, Data Layer sender |
-| `:wear` | Wear UI, Data Layer receiver, complication |
+1. Download `Material-Untis-phone-….apk` on your phone and open it.
+2. Allow installing from this source when Android asks.
+3. Find your school (search, or enter server + school name), choose student or parent, sign in.
 
-`applicationId` is `dev.x3d.dayline` on **both** APKs (required for sideloaded Data Layer).
+### Watch
 
-## RPC (contract)
+Install the phone app first. Then sideload `Material-Untis-wear-….apk` onto the watch, e.g. with [wireless debugging](https://developer.android.com/training/wearables/get-started/debugging):
 
-`POST https://<host>/WebUntis/jsonrpc.do?school=<school>`
+```bash
+adb connect <watch-ip>:<port>
+adb -s <watch> install -r Material-Untis-wear-v0.5.0.apk
+```
 
-Methods used: `authenticate`, `logout`, `getTimetable` (options form), `getLatestImportTime`, `getTimegridUnits`.
+Both APKs come from the same build, so they share the signing key and the `applicationId` – that's what lets them find each other over the Wear OS Data Layer. Open the app on the watch and tap **Sync**, or wait for the phone's next sync.
 
-School search (optional): `POST https://mobile.webuntis.com/ms/schoolquery2` method `searchSchool`.
+<details>
+<summary><b>Trying it without an account</b></summary>
+
+On the start screen, tap **Try the app / Settings** and turn on **Demo mode** (also under **Settings → Demo mode** once signed in).
+
+The demo timetable has cancellations, room / teacher / subject changes, exams, school events, office hours, stand-by duty and break supervision. Next week shows holidays. Absences cover open, excused and unexcused entries as well as multi-day illness.
+
+Sick reports you send in demo mode show up in the list and survive a refresh until the app restarts – they are never sent to the school. The switch stays on across restarts. Your real sign-in and cached school data are kept.
+
+</details>
+
+## How it works
+
+- **Phone is the source of truth.** `:app` talks to WebUntis, caches everything in Room and pushes a small, gzipped summary of today (subject, room, teacher, times, status, info) to `/dayline/today` on the Data Layer. Never credentials.
+- **Plain JSON-RPC.** `POST https://<host>/WebUntis/jsonrpc.do?school=<school>` with `authenticate`, `logout`, `getTimetable`, `getLatestImportTime` and `getTimegridUnits`. The session is the `JSESSIONID` cookie from `authenticate`.
+- **One retry, no loops.** On an auth error or HTTP 401 the app signs in once more, then shows the error.
+- **Untis time, not device time.** Dates are `YYYYMMDD`, times are ints (`720` = 07:20). The device time zone is only used for "now".
+- **School search** uses `searchSchool` on `mobile.webuntis.com/ms/schoolquery2`, like the official mobile clients. Entering server + school by hand always works.
+- **Secret login** turns the QR code's `key` (hex or base32) into a TOTP (SHA-1, 6 digits, 30 s) and sends it as the password to the same `authenticate` call.
 
 ## Privacy
 
-- Password / secret stored in EncryptedSharedPreferences only
-- Nothing sensitive on the watch Data Layer
-- No analytics, ads, or crash SDKs
-- Cleartext HTTP disabled
+Material-Untis talks only to your school's WebUntis server (and the school search, if you use it).
 
-## Build
+- Password / secret live in EncryptedSharedPreferences on the phone only
+- Nothing sensitive is sent to the watch
+- No analytics, no ads, no crash SDKs
+- Cleartext HTTP is disabled
+- Logging out removes the saved timetable and sign-in data from the device
 
-Needs JDK 17 (Android Studio JBR), Android SDK 36, Build-Tools, and a Wear OS 3+ image if you want the emulator.
+## Development
+
+```
+core/   JSON-RPC client, domain models, Room cache, encrypted credentials, WatchPayload codec
+app/    phone UI (Compose, Material 3 Expressive), WorkManager sync, Data Layer sender
+wear/   Wear OS UI, Data Layer receiver, next-lesson complication
+docs/   README screenshots
+```
+
+`applicationId` is `dev.x3d.dayline` on **both** APKs – required for sideloaded Data Layer sync.
+
+You need JDK 17 (Android Studio's JBR works), Android SDK 36 with Build-Tools, and a Wear OS 3+ (API 30+) emulator image or a real watch.
 
 ```bat
 gradlew.bat :core:test
@@ -72,40 +119,41 @@ gradlew.bat :app:assembleDebug
 gradlew.bat :wear:assembleDebug
 ```
 
-APKs:
-
-- Phone: `app/build/outputs/apk/debug/app-debug.apk`
-- Wear: `wear/build/outputs/apk/debug/wear-debug.apk`
-
-Release builds in this repo are **debug-signed** until you add your own keystore (`keystore.properties` is gitignored).
-
-Install: phone first, then the watch APK (same signing key, same applicationId). Pair via Wear OS app / adb.
+On macOS / Linux, run the same tasks with Gradle 8.13 (`gradle :app:assembleDebug`). The APKs land in `app/build/outputs/apk/debug/` and `wear/build/outputs/apk/debug/`. Install the phone APK first, then the watch APK:
 
 ```bat
 adb -s <phone> install -r app\build\outputs\apk\debug\app-debug.apk
 adb -s <watch> install -r wear\build\outputs\apk\debug\wear-debug.apk
 ```
 
-## What you still do in Android Studio
+The camera permission (QR scan) is optional – the secret can always be pasted.
 
-1. Install Android Studio Ladybug or newer
-2. SDK Manager: Android 14/15/16 (API 36), Build-Tools, Google Play Wear OS system image (API 30+)
-3. Accept licenses
-4. Create a Wear emulator or use a physical watch
-5. For a real release keystore: create `keystore.properties` locally (never commit) and point `signingConfigs.release` at it
-6. Camera permission is optional; secret can always be pasted
+### Tests
 
-## Tests
+`:core` unit tests cover Untis time parsing (`7`, `720`, `930`, `1345`), cancelled / irregular mapping, absences, QR parsing, the one-shot session retry, cache transactions and the WatchPayload gzip round-trip. Fixtures live in `core/src/test/resources/fixtures` (anonymized).
 
-`:core` unit tests cover Untis time parsing (`7`, `720`, `930`, `1345`), cancelled/irregular mapping, one-shot session retry, and WatchPayload gzip round-trip. Fixtures live in `core/src/test/resources/fixtures` (anonymized).
+### Screenshots
 
-### Demo-Modus
+The images in this README are rendered by Robolectric tests from the real Compose screens:
 
-Unter **Einstellungen → Demo-Modus** lässt sich die App mit Beispieldaten ausprobieren.
-Ohne Anmeldung sind die Einstellungen über **App ausprobieren / Einstellungen** auf der Startseite erreichbar.
-Der Demo-Stundenplan enthält Entfall, Raum-, Lehrer- und Fachwechsel, Prüfungen, Schulveranstaltungen,
-Sprechstunden, Bereitschaft und Pausenaufsicht. Die nächste Woche zeigt Demo-Ferien.
-Fehlzeiten decken offene, entschuldigte und unentschuldigte Meldungen sowie mehrtägige Erkrankungen ab.
-Eigene Demo-Krankmeldungen erscheinen in der Liste und bleiben beim Aktualisieren erhalten, bis die App neu startet.
-Der Schalter bleibt nach einem Neustart gesetzt. Echte Zugangsdaten und zwischengespeicherte Schuldaten
-bleiben erhalten; Demo-Krankmeldungen werden nicht an die Schule übermittelt.
+```bat
+gradlew.bat :app:testDebugUnitTest :wear:testDebugUnitTest -Pscreenshots
+```
+
+### Publishing a new version
+
+1. Bump `versionCode` / `versionName` in `app/build.gradle.kts` and `wear/build.gradle.kts`.
+2. Tag and push: `git tag v0.6.0 && git push origin main --tags`
+3. GitHub Actions runs the `:core` tests, builds both release APKs and publishes the release.
+
+Without signing secrets, release builds are debug-signed – fine for sideloading, but the key changes per machine, so updates won't install over each other. For a stable key, add these repository secrets:
+
+| Secret | Used for |
+|---|---|
+| `RELEASE_KEYSTORE_BASE64` | the keystore (`.jks`), base64-encoded |
+| `RELEASE_KEYSTORE_PASSWORD` | keystore password |
+| `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD` | the signing key inside it |
+
+## Disclaimer
+
+Unofficial community project, not affiliated with Untis GmbH. Use your own account only and don't share your credentials.
