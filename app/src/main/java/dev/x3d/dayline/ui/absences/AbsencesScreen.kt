@@ -78,8 +78,9 @@ fun AbsencesScreen(viewModel: AbsencesViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val reportForm by viewModel.reportForm.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val sentMessage = stringResource(R.string.report_sent)
-    LaunchedEffect(Unit) {
+    val demoMode by viewModel.demoMode.collectAsStateWithLifecycle()
+    val sentMessage = stringResource(if (demoMode) R.string.demo_report_saved else R.string.report_sent)
+    LaunchedEffect(sentMessage) {
         viewModel.sent.collect { snackbar.showSnackbar(sentMessage) }
     }
     Box(Modifier.fillMaxSize()) {

@@ -85,12 +85,18 @@ class FakePeriodRepository(
     override fun absences(): Flow<AbsenceReport?> = absenceReport
 
     override suspend fun refreshAbsences() {
+        if (absenceReport.value != null) return
+        val today = UntisDate.today()
+        val year = today.year - if (today.month < 8) 1 else 0
         absenceReport.value = AbsenceReport(
-            schoolYear = SchoolYear("2026/2027", UntisDate(20260831), UntisDate(20270718)),
+            schoolYear = SchoolYear("$year/${year + 1}", UntisDate(year * 10000 + 801), UntisDate((year + 1) * 10000 + 731)),
             absences = listOf(
-                Absence(3, UntisDate(20261009), UntisDate(20261009), UntisTime(950), UntisTime(1125), "Arzttermin", null, AbsenceStatus.OPEN, null),
-                Absence(2, UntisDate(20260922), UntisDate(20260923), UntisTime(800), UntisTime(1320), "Krankheit", "Fieber", AbsenceStatus.EXCUSED, "entschuldigt"),
-                Absence(1, UntisDate(20260904), UntisDate(20260904), UntisTime(800), UntisTime(930), "Verspätung", null, AbsenceStatus.UNEXCUSED, "nicht entschuldigt"),
+                Absence(6, today.plusDays(-1), today.plusDays(-1), UntisTime(745), UntisTime(1310), "Krankheit", "Demo: Krankmeldung wartet auf Entschuldigung.", AbsenceStatus.OPEN, "offen"),
+                Absence(5, today.plusDays(-3), today.plusDays(-3), UntisTime(940), UntisTime(1115), "Arzttermin", "Demo: Attest eingereicht.", AbsenceStatus.EXCUSED, "entschuldigt"),
+                Absence(4, today.plusDays(-7), today.plusDays(-5), UntisTime(745), UntisTime(1535), "Krankheit", "Demo: Mehrtägige Erkrankung mit Fieber.", AbsenceStatus.EXCUSED, "entschuldigt"),
+                Absence(3, today.plusDays(-8), today.plusDays(-8), UntisTime(745), UntisTime(805), "Verspätung", "Demo: Bus verpasst.", AbsenceStatus.UNEXCUSED, "nicht entschuldigt"),
+                Absence(2, today.plusDays(-10), today.plusDays(-10), UntisTime(1225), UntisTime(1535), "Vorzeitig gegangen", null, AbsenceStatus.UNEXCUSED, "nicht entschuldigt"),
+                Absence(1, today.plusDays(-14), today.plusDays(-14), UntisTime(745), UntisTime(1310), "Beurlaubung", "Demo: Familienangelegenheit, genehmigt.", AbsenceStatus.EXCUSED, "entschuldigt"),
             ),
             fetchedAt = System.currentTimeMillis(),
         )
@@ -98,7 +104,7 @@ class FakePeriodRepository(
 
     override suspend fun absenceReportOptions() = AbsenceReportOptions(
         canReport = true,
-        reasons = listOf(AbsenceReason(1, "Krankheit"), AbsenceReason(2, "Arzttermin")),
+        reasons = listOf(AbsenceReason(1, "Krankheit"), AbsenceReason(2, "Arzttermin"), AbsenceReason(3, "Sonstiger Grund")),
         defaultReasonId = 1,
         reasonAndTextHidden = false,
     )
@@ -110,7 +116,23 @@ class FakePeriodRepository(
         endTime: UntisTime,
         reasonId: Int,
         text: String,
-    ) = Unit
+    ) {
+        require(endDate >= startDate) { "Enddatum muss nach dem Startdatum liegen." }
+        require(endDate != startDate || endTime > startTime) { "Endzeit muss nach der Startzeit liegen." }
+        val reason = absenceReportOptions().reasons.firstOrNull { it.id == reasonId }
+        requireNotNull(reason) { "Bitte einen gültigen Grund wählen." }
+        refreshAbsences()
+        absenceReport.update { report ->
+            report?.copy(
+                absences = listOf(Absence(
+                    (report.absences.maxOfOrNull { it.id } ?: 0) + 1,
+                    startDate, endDate, startTime, endTime, reason.name, text.ifBlank { null },
+                    AbsenceStatus.OPEN, "offen – Demo",
+                )) + report.absences,
+                fetchedAt = System.currentTimeMillis(),
+            )
+        }
+    }
 
     override fun lessonsForDate(date: UntisDate): Flow<List<Lesson>> =
         lessons.map { list -> list.filter { it.date == date }.sortedBy { it.start.raw } }
@@ -123,20 +145,14 @@ class FakePeriodRepository(
     override fun subjects(): Flow<List<NamedRef>> =
         lessons.map { list -> list.mapNotNull { it.subject }.distinctBy { it.shortName }.sortedBy { it.shortName } }
 
-    override fun timegrid(): Flow<List<TimegridDay>> = flowOf(
-        listOf(
-            TimegridDay(
-                weekday = 2,
-                units = listOf(
-                    TimegridUnit("1", UntisTime(800), UntisTime(845)),
-                    TimegridUnit("2", UntisTime(850), UntisTime(935)),
-                    TimegridUnit("3", UntisTime(955), UntisTime(1040)),
-                ),
-            ),
-        ),
-    )
+    override fun timegrid(): Flow<List<TimegridDay>> = lessons.map { list ->
+        list.groupBy { it.date.toLocalDate().dayOfWeek.value + 1 }.map { (weekday, periods) ->
+            TimegridDay(weekday, periods.map { it.start to it.end }.distinct().sortedBy { it.first.raw }
+                .mapIndexed { index, (start, end) -> TimegridUnit("${index + 1}", start, end) })
+        }
+    }
 
-    override fun holidays(): Flow<List<Holiday>> = flowOf(emptyList())
+    override fun holidays(): Flow<List<Holiday>> = flowOf(DemoData.holidays())
 
     override suspend fun setSyncIntervalMinutes(minutes: Int) {
         interval.value = minutes

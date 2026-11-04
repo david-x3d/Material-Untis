@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,6 +48,7 @@ data class AbsencesUiState(
 
 /** Form state of the "report absence" sheet. */
 data class ReportForm(
+    val demoMode: Boolean = false,
     val options: AbsenceReportOptions? = null,
     val loadingOptions: Boolean = false,
     val startDate: UntisDate = UntisDate.today(),
@@ -63,6 +65,7 @@ data class ReportForm(
 class AbsencesViewModel(
     private val repository: PeriodRepository,
 ) : ViewModel() {
+    val demoMode = repository.demoMode
     private val filter = MutableStateFlow(AbsenceFilter.ALL)
     private val loading = MutableStateFlow(false)
     private val error = MutableStateFlow<Throwable?>(null)
@@ -79,10 +82,16 @@ class AbsencesViewModel(
 
     init {
         refresh()
+        viewModelScope.launch {
+            repository.demoMode.drop(1).collect {
+                closeReport()
+                refresh()
+            }
+        }
     }
 
     fun openReport() {
-        form.value = ReportForm(loadingOptions = true)
+        form.value = ReportForm(demoMode = repository.demoMode.value, loadingOptions = true)
         applyDayTimes(UntisDate.today(), UntisDate.today())
         viewModelScope.launch {
             try {
@@ -122,6 +131,10 @@ class AbsencesViewModel(
 
     fun sendReport() {
         val current = form.value ?: return
+        if (current.demoMode != repository.demoMode.value) {
+            closeReport()
+            return
+        }
         val reasonId = current.reasonId ?: return
         if (current.sending) return
         viewModelScope.launch {

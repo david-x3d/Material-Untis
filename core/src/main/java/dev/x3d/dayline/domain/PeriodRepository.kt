@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface PeriodRepository {
+    val demoMode: StateFlow<Boolean> get() = kotlinx.coroutines.flow.MutableStateFlow(false)
+    suspend fun setDemoMode(enabled: Boolean) {}
+
     val session: StateFlow<UserSession?>
     val syncState: StateFlow<SyncState>
     val watchStatus: StateFlow<WatchStatus>

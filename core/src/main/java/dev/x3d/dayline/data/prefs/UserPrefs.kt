@@ -22,6 +22,10 @@ class UserPrefs(context: Context) {
     val lastSyncAt: Flow<Long?> = store.data.map { it[LAST_SYNC] }
 
     /** Wallpaper colours (Android 12+) instead of the Material-Untis palette. Off by default. */
+    val demoMode: Flow<Boolean> = store.data.map { it[DEMO_MODE] ?: false }
+
+    suspend fun setDemoMode(enabled: Boolean) { store.edit { it[DEMO_MODE] = enabled } }
+
     val dynamicColor: Flow<Boolean> = store.data.map { it[DYNAMIC_COLOR] ?: false }
 
     val subjectColors: Flow<SubjectColors> = store.data.map { prefs ->
@@ -70,6 +74,7 @@ class UserPrefs(context: Context) {
         private val SYNC_MINUTES = intPreferencesKey("sync_minutes")
         private val LAST_IMPORT = longPreferencesKey("last_import")
         private val LAST_SYNC = longPreferencesKey("last_sync")
+        private val DEMO_MODE = booleanPreferencesKey("demo_mode")
         private val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         private val COLORS_CUSTOM = booleanPreferencesKey("subject_colors_custom")
         private val COLORS_SEED = intPreferencesKey("subject_colors_seed")

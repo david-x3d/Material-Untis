@@ -16,6 +16,12 @@ import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,8 +63,10 @@ object Routes {
 @Composable
 fun DaylineRoot() {
     val repository = remember { GlobalContext.get().get<PeriodRepository>() }
+    val demo by repository.demoMode.collectAsStateWithLifecycle()
+    val session by repository.session.collectAsStateWithLifecycle()
     val nav = rememberNavController()
-    val start = if (repository.session.value == null) Routes.WELCOME else Routes.TIMETABLE
+    val start = remember { if (repository.session.value == null) Routes.WELCOME else Routes.TIMETABLE }
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     val tabs = listOf(
@@ -66,20 +74,30 @@ fun DaylineRoot() {
         Tab(Routes.ABSENCES, R.string.nav_absences, Icons.Outlined.Sick, Icons.Filled.Sick),
         Tab(Routes.SETTINGS, R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
     )
-    val showBar = tabs.any { it.route == route }
+    val showBar = session != null && tabs.any { it.route == route }
+    LaunchedEffect(session, route) {
+        if (session == null && route != null && (route == Routes.TIMETABLE || route == Routes.ABSENCES || route == Routes.LESSON)) {
+            nav.navigate(Routes.WELCOME) { popUpTo(0) { inclusive = true } }
+        }
+    }
 
     Scaffold(
         bottomBar = {
-            if (showBar) {
-                ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                    tabs.forEach { tab ->
-                        val selected = route == tab.route
-                        ShortNavigationBarItem(
-                            selected = selected,
-                            onClick = { nav.tab(tab.route) },
-                            icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                            label = { Text(stringResource(tab.label)) },
-                        )
+            Column {
+                if (demo) {
+                    Text(stringResource(R.string.demo_banner), modifier = Modifier.fillMaxWidth().padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                }
+                if (showBar) {
+                    ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                        tabs.forEach { tab ->
+                            val selected = route == tab.route
+                            ShortNavigationBarItem(
+                                selected = selected,
+                                onClick = { nav.tab(tab.route) },
+                                icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
+                                label = { Text(stringResource(tab.label)) },
+                            )
+                        }
                     }
                 }
             }
@@ -93,7 +111,10 @@ fun DaylineRoot() {
                 .consumeWindowInsets(padding),
         ) {
             composable(Routes.WELCOME) {
-                AccountTypeScreen(onContinue = { nav.navigate(Routes.SCHOOL) })
+                Column {
+                    TextButton(onClick = { nav.navigate(Routes.SETTINGS) }) { Text(stringResource(R.string.demo_settings)) }
+                    AccountTypeScreen(onContinue = { nav.navigate(Routes.SCHOOL) })
+                }
             }
             composable(Routes.SCHOOL) {
                 SchoolScreen(onContinue = { nav.navigate(Routes.LOGIN) })

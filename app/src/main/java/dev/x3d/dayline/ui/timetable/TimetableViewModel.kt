@@ -37,6 +37,8 @@ class TimetableViewModel(
 ) : ViewModel() {
     val session: StateFlow<UserSession?> = repository.session
 
+    val demoMode = repository.demoMode
+    private var loadedDemoMode = repository.demoMode.value
     private val loadedWeeks = mutableSetOf<UntisDate>()
     private val loadingWeeks = MutableStateFlow<Set<UntisDate>>(emptySet())
     val loading: StateFlow<Set<UntisDate>> = loadingWeeks.asStateFlow()
@@ -76,6 +78,11 @@ class TimetableViewModel(
 
     /** Loads a week once per screen visit; the cache is shown meanwhile. */
     fun ensureLoaded(monday: UntisDate) {
+        if (loadedDemoMode != demoMode.value) {
+            loadedDemoMode = demoMode.value
+            loadedWeeks.clear()
+            lockedWeeks.value = emptySet()
+        }
         if (loadedWeeks.add(monday)) load(monday)
     }
 

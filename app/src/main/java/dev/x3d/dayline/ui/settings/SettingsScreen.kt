@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -58,6 +59,7 @@ fun SettingsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var confirmLogout by remember { mutableStateOf(false) }
+    val demoSwitchLabel = stringResource(R.string.demo_title)
     val time = remember { DateFormat.getTimeInstance(DateFormat.SHORT) }
 
     Column(Modifier.fillMaxSize()) {
@@ -70,6 +72,17 @@ fun SettingsScreen(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            SectionLabel(stringResource(R.string.demo_title))
+            SegmentedGroup(listOf({
+                SettingRow(Icons.Outlined.School, stringResource(R.string.demo_title), stringResource(R.string.demo_hint)) {
+                    androidx.compose.material3.Switch(
+                        checked = state.demoMode,
+                        onCheckedChange = viewModel::setDemoMode,
+                        modifier = Modifier.semantics { contentDescription = demoSwitchLabel },
+                    )
+                }
+            }))
+
             SectionLabel(stringResource(R.string.settings_account))
             SegmentedGroup(
                 listOf(
@@ -156,7 +169,7 @@ fun SettingsScreen(
 
             Spacer(Modifier.padding(4.dp))
             FilledTonalButton(
-                onClick = { confirmLogout = true },
+                onClick = { if (state.demoMode) viewModel.setDemoMode(false) else confirmLogout = true },
                 shapes = ButtonDefaults.shapes(),
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.filledTonalButtonColors(
@@ -166,7 +179,7 @@ fun SettingsScreen(
             ) {
                 Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.settings_logout))
+                Text(stringResource(if (state.demoMode) R.string.demo_exit else R.string.settings_logout))
             }
         }
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Material-Untis</string>
+    <string name="app_name" translatable="false">Material-Untis</string>
     <string name="nav_timetable">Timetable</string>
     <string name="nav_absences">Absences</string>
     <string name="nav_settings">Settings</string>
@@ -120,4 +120,10 @@ This is sent to your school like in WebUntis.</string>
     <string name="school_hint">Search for your school or enter the server yourself.</string>
     <string name="login_student_hint">Use your own WebUntis login.</string>
     <string name="login_parent_hint">Use the parent account. Your child is picked automatically.</string>
+    <string name="demo_title">Demo mode</string>
+    <string name="demo_hint">Explore cancellations, room / teacher / subject changes, exams, events and absences. Next week shows holidays. Reports stay in this demo; your account is preserved.</string>
+    <string name="demo_banner">Demo mode · Sample data · Reports stay local</string>
+    <string name="demo_settings">Try the app / Settings</string>
+    <string name="demo_report_saved">Demo report saved locally.</string>
+    <string name="demo_exit">Exit demo mode</string>
 </resources>

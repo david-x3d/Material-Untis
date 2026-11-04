@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
+    val demoMode: Boolean = false,
     val session: UserSession? = null,
     val interval: Int = 15,
     val watch: WatchStatus = WatchStatus(),
@@ -36,7 +37,7 @@ class SettingsViewModel(
         repository.syncIntervalMinutes(),
         repository.watchStatus,
         repository.syncState,
-    ) { session, interval, watch, sync -> SettingsUiState(session, interval, watch, sync) }
+    ) { session, interval, watch, sync -> SettingsUiState(session = session, interval = interval, watch = watch, sync = sync) }
 
     val state: StateFlow<SettingsUiState> = combine(
         base,
@@ -45,7 +46,11 @@ class SettingsViewModel(
         repository.subjects(),
     ) { state, dynamic, colors, subjects ->
         state.copy(dynamicColor = dynamic, subjectColors = colors, subjects = subjects)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState(session = repository.session.value))
+    }.combine(repository.demoMode) { state, demo -> state.copy(demoMode = demo) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState(session = repository.session.value))
+
+    fun setDemoMode(enabled: Boolean) {
+        viewModelScope.launch { repository.setDemoMode(enabled) }
+    }
 
     fun setInterval(minutes: Int) {
         viewModelScope.launch {
@@ -82,6 +87,10 @@ class SettingsViewModel(
 
     fun logout(onDone: () -> Unit) {
         viewModelScope.launch {
+            if (repository.demoMode.value) {
+                repository.setDemoMode(false)
+                return@launch
+            }
             syncScheduler.cancel()
             repository.logout()
             onDone()

@@ -98,3 +98,14 @@ adb -s <watch> install -r wear\build\outputs\apk\debug\wear-debug.apk
 ## Tests
 
 `:core` unit tests cover Untis time parsing (`7`, `720`, `930`, `1345`), cancelled/irregular mapping, one-shot session retry, and WatchPayload gzip round-trip. Fixtures live in `core/src/test/resources/fixtures` (anonymized).
+
+### Demo-Modus
+
+Unter **Einstellungen → Demo-Modus** lässt sich die App mit Beispieldaten ausprobieren.
+Ohne Anmeldung sind die Einstellungen über **App ausprobieren / Einstellungen** auf der Startseite erreichbar.
+Der Demo-Stundenplan enthält Entfall, Raum-, Lehrer- und Fachwechsel, Prüfungen, Schulveranstaltungen,
+Sprechstunden, Bereitschaft und Pausenaufsicht. Die nächste Woche zeigt Demo-Ferien.
+Fehlzeiten decken offene, entschuldigte und unentschuldigte Meldungen sowie mehrtägige Erkrankungen ab.
+Eigene Demo-Krankmeldungen erscheinen in der Liste und bleiben beim Aktualisieren erhalten, bis die App neu startet.
+Der Schalter bleibt nach einem Neustart gesetzt. Echte Zugangsdaten und zwischengespeicherte Schuldaten
+bleiben erhalten; Demo-Krankmeldungen werden nicht an die Schule übermittelt.

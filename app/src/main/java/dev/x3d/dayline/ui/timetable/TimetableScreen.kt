@@ -90,6 +90,7 @@ fun TimetableScreen(
     viewModel: TimetableViewModel = koinViewModel(),
 ) {
     val session by viewModel.session.collectAsStateWithLifecycle()
+    val demoMode by viewModel.demoMode.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
     val locked by viewModel.locked.collectAsStateWithLifecycle()
     val pager = rememberPagerState(initialPage = CENTER_PAGE) { CENTER_PAGE * 2 }
@@ -103,7 +104,7 @@ fun TimetableScreen(
         }
     }
 
-    LaunchedEffect(pager.settledPage) {
+    LaunchedEffect(pager.settledPage, demoMode) {
         viewModel.ensureLoaded(viewModel.mondayFor(pager.settledPage - CENTER_PAGE))
     }
     LaunchedEffect(Unit) {

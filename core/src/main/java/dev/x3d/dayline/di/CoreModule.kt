@@ -3,6 +3,7 @@ package dev.x3d.dayline.di
 import dev.x3d.dayline.data.db.PeriodDatabase
 import dev.x3d.dayline.data.prefs.CredentialStore
 import dev.x3d.dayline.data.prefs.UserPrefs
+import dev.x3d.dayline.data.repo.DemoPeriodRepository
 import dev.x3d.dayline.data.repo.PeriodRepositoryImpl
 import dev.x3d.dayline.data.rpc.SchoolSearchClient
 import dev.x3d.dayline.data.rpc.SessionCookieJar
@@ -41,16 +42,19 @@ val coreModule = module {
     single { CredentialStore(androidContext()) }
     single { UserPrefs(androidContext()) }
     single<PeriodRepository> {
-        PeriodRepositoryImpl(
-            client = get(),
-            schoolSearch = get(),
-            lessonDao = get(),
-            timegridDao = get(),
-            metaDao = get(),
-            credentials = get(),
+        DemoPeriodRepository(
+            real = PeriodRepositoryImpl(
+                client = get(),
+                schoolSearch = get(),
+                lessonDao = get(),
+                timegridDao = get(),
+                metaDao = get(),
+                credentials = get(),
+                prefs = get(),
+                watchPusher = getOrNull<PeriodRepositoryImpl.WatchPusher>(),
+                json = get(),
+            ),
             prefs = get(),
-            watchPusher = getOrNull<PeriodRepositoryImpl.WatchPusher>(),
-            json = get(),
         )
     }
 }

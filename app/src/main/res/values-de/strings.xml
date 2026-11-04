@@ -119,4 +119,10 @@ Das wird wie in WebUntis an deine Schule gesendet.</string>
     <string name="school_hint">Such deine Schule oder gib den Server selbst ein.</string>
     <string name="login_student_hint">Mit deinem eigenen WebUntis-Login.</string>
     <string name="login_parent_hint">Mit dem Eltern-Konto. Dein Kind wird automatisch erkannt.</string>
+    <string name="demo_title">Demo-Modus</string>
+    <string name="demo_hint">Entfall, Raum-, Lehrer- und Fachwechsel, Prüfungen, Veranstaltungen und Fehlzeiten ausprobieren. Nächste Woche sind Ferien. Meldungen bleiben in der Demo; dein Account bleibt erhalten.</string>
+    <string name="demo_banner">Demo-Modus · Beispieldaten · Meldungen bleiben lokal</string>
+    <string name="demo_settings">App ausprobieren / Einstellungen</string>
+    <string name="demo_report_saved">Demo-Krankmeldung lokal gespeichert.</string>
+    <string name="demo_exit">Demo-Modus beenden</string>
 </resources>
